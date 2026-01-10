@@ -11,10 +11,11 @@
 #include "SDL2-2.0.10/include/SDL_rect.h"
 
 #include "util.h"
+#include "structures.h"
 
 
-#define SCREEN_WIDTH	640
-#define SCREEN_HEIGHT	480
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
 const int BACKGROUND_HEIGHT = SCREEN_HEIGHT / 4;
 const int FLOOR_HEIGHT = SCREEN_HEIGHT - BACKGROUND_HEIGHT;
