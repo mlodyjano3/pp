@@ -1,5 +1,5 @@
 CC = gcc
-SRC = code/main.c
+SRC = code/main.c code/animacje.c
 HEADERS = -I./headers
 OUT = gra
 

@@ -2,7 +2,7 @@
 #define STRUCTURES_H
 
 #ifdef __APPLE__
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #else
 #include "./SDL2-2.0.10/include/SDL.h"
 #endif
