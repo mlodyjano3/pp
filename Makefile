@@ -1,13 +1,18 @@
 CC = gcc
-SRC = code/main.c code/animacje.c
-HEADERS = -I./headers
-OUT = gra
+SRC = code/main.c code/drawing.c code/loadfiles.c
+OUT = ./compiled/gra
 
-mac:
-	$(CC) $(SRC) -o $(OUT) $(HEADERS) `sdl2-config --cflags --libs`
+INCLUDES = -I./headers `sdl2-config --cflags`
+LIBS = `sdl2-config --libs`
 
-lab:
-	$(CC) -O2 -I./SDL2-2.0.10/include -L. -o main $(SRC) $(HEADERS) -lm -lSDL2-64 -lpthread -ldl -Irt
+all: setup compile
+
+setup:
+	mkdir -p ./compiled
+
+compile:
+	mkdir -p ./compiled
+	gcc -O2 -I./headers `sdl2-config --cflags` -o ./compiled/gra code/main.c code/drawing.c code/loadfiles.c code/player.c `sdl2-config --libs`
 
 clean:
-	rm -f $(OUT) main
+	rm -rf ./compiled

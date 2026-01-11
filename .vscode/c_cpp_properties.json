@@ -4,7 +4,8 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/homebrew/include"
+                "${workspaceFolder}/headers",
+                "${workspaceFolder}/SDL2-2.0.10/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

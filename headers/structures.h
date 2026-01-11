@@ -1,11 +1,16 @@
 #ifndef STRUCTURES_H
 #define STRUCTURES_H
 
-#ifdef __APPLE__
 #include <SDL.h>
-#else
-#include "./SDL2-2.0.10/include/SDL.h"
-#endif
+#include <SDL_main.h>
+
+typedef struct {
+    float x, y;
+} Position;
+
+typedef struct {
+    float x, y;
+} Direction;
 
 typedef enum {
     ENTITY_PLAYER,
@@ -14,10 +19,10 @@ typedef enum {
 } EntityType;
 
 typedef struct {
-    float x, y;
-    int w, h;
-    float dx, dy;
-    float speed;
+    Position position;
+    int w, h; // szerokosc i wys
+    Direction direction;
+    float speed; 
     int health;
     int maxHealth;
     int onGround;
@@ -25,12 +30,22 @@ typedef struct {
     int frame;
     int facingLeft;
     EntityType type;
-    SDL_Texture* tex;
+    SDL_Surface* tex;
 } Entity;
 
-typedef struct {
-    float x, y;
+typedef struct { 
+    Position position; // pozycja kamery
     int w, h;
 } Camera;
+
+typedef struct {
+    double worldTime;
+    double fpsTimer;
+    double fps;
+    int frames;
+    double distance;
+    double etiSpeed;
+    int quit;
+} GameState;
 
 #endif

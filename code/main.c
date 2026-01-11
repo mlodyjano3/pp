@@ -3,75 +3,19 @@
 #include<stdio.h>
 #include<string.h>
 
-#include"./SDL2-2.0.10/include/SDL.h"
-#include"./SDL2-2.0.10/include/SDL_main.h"
+#include "../headers/structures.h"
+#include "../headers/drawing.h"
+#include "../headers/loadfiles.h"
+#include "../headers/consts.h"
+#include "../headers/player.h"
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
-
-
-void DrawString(SDL_Surface *screen, int x, int y, const char *text, SDL_Surface *charset) {
-	int px, py, c;
-	SDL_Rect s, d;
-	s.w = 8;
-	s.h = 8;
-	d.w = 8;
-	d.h = 8;
-	while (*text) {
-		c = *text & 255;
-		px = (c % 16) * 8;
-		py = (c / 16) * 8;
-		s.x = px;
-		s.y = py;
-		d.x = x;
-		d.y = y;
-		SDL_BlitSurface(charset, &s, screen, &d);
-		x += 8;
-		text++;
-	};
-};
-
-void DrawSurface(SDL_Surface *screen, SDL_Surface *sprite, int x, int y) {
-	SDL_Rect dest;
-	dest.x = x - sprite->w / 2;
-	dest.y = y - sprite->h / 2;
-	dest.w = sprite->w;
-	dest.h = sprite->h;
-	SDL_BlitSurface(sprite, NULL, screen, &dest);
-	};
-
-
-void DrawPixel(SDL_Surface *surface, int x, int y, Uint32 color) {
-	int bpp = surface->format->BytesPerPixel;
-	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
-	*(Uint32 *)p = color;
-	};
-
-
-void DrawLine(SDL_Surface *screen, int x, int y, int l, int dx, int dy, Uint32 color) {
-	for(int i = 0; i < l; i++) {
-		DrawPixel(screen, x, y, color);
-		x += dx;
-		y += dy;
-		};
-	};
-
-
-void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
-                   Uint32 outlineColor, Uint32 fillColor) {
-	int i;
-	DrawLine(screen, x, y, k, 0, 1, outlineColor);
-	DrawLine(screen, x + l - 1, y, k, 0, 1, outlineColor);
-	DrawLine(screen, x, y, l, 1, 0, outlineColor);
-	DrawLine(screen, x, y + k - 1, l, 1, 0, outlineColor);
-	for(i = y + 1; i < y + k - 1; i++)
-		DrawLine(screen, x + 1, i, l - 2, 1, 0, fillColor);
-	};
+#include <SDL.h>
+#include <SDL_main.h>
 
 
 int main(int argc, char **argv) {
-	int t1, t2, quit, frames, rc;
-	double delta, worldTime, fpsTimer, fps, distance, etiSpeed;
+	// inicjalizacje wszelkie
+
 	SDL_Event event;
 	SDL_Surface *screen, *charset;
 	SDL_Surface *eti;
@@ -79,27 +23,24 @@ int main(int argc, char **argv) {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 
-	printf("wyjscie printfa trafia do tego okienka\n");
-	printf("printf output goes here\n");
+	int quit, rc;
 
-	if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		printf("SDL_Init error: %s\n", SDL_GetError());
 		return 1;
-		}
+	}
 
-	rc = SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0,&window, &renderer);
-	if(rc != 0) {
+	rc = SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
+	if (rc != 0) {
 		SDL_Quit();
 		printf("SDL_CreateWindowAndRenderer error: %s\n", SDL_GetError());
 		return 1;
-		};
+	};
 	
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-
-	SDL_SetWindowTitle(window, "Szablon do zdania drugiego 2017");
-
+	SDL_SetWindowTitle(window, "Projekt etap 2 Jan Krol");
 
 	screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 
@@ -108,31 +49,8 @@ int main(int argc, char **argv) {
 	                           SCREEN_WIDTH, SCREEN_HEIGHT);
 
 
+
 	SDL_ShowCursor(SDL_DISABLE);
-
-	charset = SDL_LoadBMP("./cs8x8.bmp");
-	if(charset == NULL) {
-		printf("SDL_LoadBMP(cs8x8.bmp) error: %s\n", SDL_GetError());
-		SDL_FreeSurface(screen);
-		SDL_DestroyTexture(scrtex);
-		SDL_DestroyWindow(window);
-		SDL_DestroyRenderer(renderer);
-		SDL_Quit();
-		return 1;
-		};
-	SDL_SetColorKey(charset, SDL_TRUE, 0x000000);
-
-	eti = SDL_LoadBMP("./eti.bmp");
-	if(eti == NULL) {
-		printf("SDL_LoadBMP(eti.bmp) error: %s\n", SDL_GetError());
-		SDL_FreeSurface(charset);
-		SDL_FreeSurface(screen);
-		SDL_DestroyTexture(scrtex);
-		SDL_DestroyWindow(window);
-		SDL_DestroyRenderer(renderer);
-		SDL_Quit();
-		return 1;
-		};
 
 	char text[128];
 	int czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
@@ -140,71 +58,124 @@ int main(int argc, char **argv) {
 	int czerwony = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
 	int niebieski = SDL_MapRGB(screen->format, 0x11, 0x11, 0xCC);
 
-	t1 = SDL_GetTicks();
+	if (LoadFiles(&screen, &charset, &eti, window, renderer, scrtex) != 0) {
+        printf("Blad ladowania plikow! Upewnij sie, ze pliki .bmp sa w folderze z plikiem wykonywalnym (compiled/).\n");
+        return 1; 
+    }
+	SDL_SetColorKey(charset, SDL_TRUE, 0x000000);
 
-	frames = 0;
-	fpsTimer = 0;
-	fps = 0;
+	GameState gameState;
+	Entity player;
+
+	playerInitialize(
+		&player, 
+		100,
+		FLOOR_ZERO_Y + 50,
+		eti // tekstura
+	);
+
+	int t1 = SDL_GetTicks();
+	int frames = 0;
+	gameState.fpsTimer = 0;
+	gameState.fps = 0;
 	quit = 0;
-	worldTime = 0;
-	distance = 0;
-	etiSpeed = 1;
+	gameState.worldTime = 0;
+	gameState.distance = 0;
+	gameState.etiSpeed = 1;
+	gameState.quit = 0;
 
+	Camera camera;
+	camera.position.x = 0;
+	camera.position.y = 0;
+	camera.w = SCREEN_WIDTH;
+	camera.h = SCREEN_HEIGHT;
+
+
+    //
+	// glowna petla
+    //
 	while(!quit) {
-		t2 = SDL_GetTicks();
-		delta = (t2 - t1) * 0.001;
+		int t2 = SDL_GetTicks();
+		double delta = (t2 - t1) * 0.001;
 		t1 = t2;
 
-		worldTime += delta;
+		gameState.worldTime += delta;
 
-		distance += etiSpeed * delta;
+		playerUpdate(&player, delta); // update gracza
+
+		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.w / 2); // logika positioningu kamery na osi x
+		camera.position.y = SCREEN_HEIGHT / 2; // kamera zawsze pozostaje w tym samym miejscu osi y
+
+		if (camera.position.x < 0) {
+            camera.position.x = 0;
+        };
+		if (camera.position.x > LEVEL_WIDTH - SCREEN_WIDTH) {
+            camera.position.x = LEVEL_WIDTH - SCREEN_WIDTH;
+        };
+
 
 		SDL_FillRect(screen, NULL, czarny);
 
-		DrawSurface(screen, eti,
-		            SCREEN_WIDTH / 2 + sin(distance) * SCREEN_HEIGHT / 3,
-			    SCREEN_HEIGHT / 2 + cos(distance) * SCREEN_HEIGHT / 3);
+		// rysowanie gracza
+        DrawSurface(screen, player.tex, (int)player.position.x - camera.position.x, (int)player.position.y);
 
-		fpsTimer += delta;
-		if(fpsTimer > 0.5) {
-			fps = frames * 2;
+		// logika fpsow
+		gameState.fpsTimer += delta;
+		if (gameState.fpsTimer > 0.5) {
+			gameState.fps = frames * 2;
 			frames = 0;
-			fpsTimer -= 0.5;
-			};
+			gameState.fpsTimer -= 0.5;
+		};
 
-		DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 36, czerwony, niebieski);
-		sprintf(text, "Szablon drugiego zadania, czas trwania = %.1lf s  %.0lf klatek / s", worldTime, fps);
+		// interface 
+		DrawRectangle(
+			screen, 
+			4,
+			4, 
+			SCREEN_WIDTH - 8, 
+			36, 
+			czerwony, 
+			niebieski
+		);
+		sprintf(text, "Szablon drugiego zadania, czas trwania = %.1lf s  %.0lf klatek / s", gameState.worldTime, gameState.fps);
 		DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 10, text, charset);
-		sprintf(text, "Esc - wyjscie, \030 - przyspieszenie, \031 - zwolnienie");
+		sprintf(text, "Esc - wyjscie, \030 - przyspieszenie, \031 - zwolnienie, n - nowa gra");
 		DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 26, text, charset);
 
-		SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch);
-		SDL_RenderCopy(renderer, scrtex, NULL, NULL);
-		SDL_RenderPresent(renderer);
+		SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch); // screen -> scrtex (ram -> gpu)
+		SDL_RenderCopy(renderer, scrtex, NULL, NULL); // rysuje teksture
+		SDL_RenderPresent(renderer); // wyswietla frame
 
-		while(SDL_PollEvent(&event)) {
+		// obsluga przyciskow
+		while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_KEYDOWN:
-                    if(event.key.keysym.sym == SDLK_ESCAPE) {
-                        quit = 1;
-                    } else if(event.key.keysym.sym == SDLK_n) {
-						// // // 
-                        
-                    } else if(event.key.keysym.sym == SDLK_UP) {
-                        etiSpeed = 2.0;
-                    } else if(event.key.keysym.sym == SDLK_DOWN) {
-                        etiSpeed = 0.3;
-                    };
-                    break;
-                case SDL_KEYUP:
-                    etiSpeed = 1.0;
-                    break;
-                case SDL_QUIT:
+                case SDL_KEYDOWN: {
+					switch (event.key.keysym.sym) {
+						case SDLK_ESCAPE: {
+							quit = 1;
+							break;
+						} 
+						case SDLK_n: {
+							// przywracanie stanu poczatkowego poprzez zmiane wartosci w strukturze
+							gameState.worldTime = 0.0;
+							gameState.distance = 0.0;
+							frames = 0;
+							gameState.fpsTimer = 0.0;
+							gameState.etiSpeed = 1.0;
+						} 
+					};
+					break;
+				};
+                case SDL_QUIT: { // kasacja gry, okno closed
                     quit = 1;
                     break;
-            };
-        };
+				};
+        	};
 
+		};
+		frames++;
+	};
+	// zwolnienie resources
 	SDL_FreeSurface(charset);
 	SDL_FreeSurface(screen);
 	SDL_DestroyTexture(scrtex);
@@ -213,4 +184,4 @@ int main(int argc, char **argv) {
 
 	SDL_Quit();
 	return 0;
-	};
+};
