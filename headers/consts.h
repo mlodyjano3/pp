@@ -4,14 +4,14 @@
 #include <SDL.h>
 #include <SDL_main.h>
 
+
+// proporcje widoku itd
 #define SCREEN_WIDTH	640
 #define SCREEN_HEIGHT	480
-
 #define LEVEL_WIDTH 2000
 
-// ratio 1 do 3
-#define BACKGROUND_HEIGHT (SCREEN_HEIGHT / 4) // 1/4 ekranu
-#define FLOOR_HEIGHT (SCREEN_HEIGHT - BACKGROUND_HEIGHT) // 3/4 ekranu
+#define BACKGROUND_HEIGHT (SCREEN_HEIGHT / 5) * 2// 2/5 ekranu
+#define FLOOR_HEIGHT (SCREEN_HEIGHT - BACKGROUND_HEIGHT) // 3/5ekranu
 
 #define BACKGROUND_WIDTH SCREEN_WIDTH
 #define FLOOR_WIDTH SCREEN_WIDTH
@@ -23,5 +23,16 @@
 #define DOWN 1
 #define LEFT -1
 #define RIGHT 1
+
+
+// combo define'y
+#define MAX_COMBOS_TRACKED 100
+#define COMBO_TIMEOUT_MS 200.0f
+
+#define FIRST_COMBO_a {SDL_SCANCODE_D, SDL_SCANCODE_D}
+#define FIRST_COMBO_b {SDL_SCANCODE_RIGHT, SDL_SCANCODE_RIGHT}
+#define SECOND_COMBO_a {SDL_SCANCODE_Q, SDL_SCANCODE_Q, SDL_SCANCODE_Q}
+#define THIRD_COMBO_a {SDL_SCANCODE_E, SDL_SCANCODE_Q, SDL_SCANCODE_E}
+#define MAX_COMBO_STEPS 3
 
 #endif

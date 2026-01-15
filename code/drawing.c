@@ -5,6 +5,7 @@
 
 #include <SDL.h>
 #include <SDL_main.h>
+#include <../headers/structures.h>
 
 void DrawString(SDL_Surface *screen, int x, int y, const char *text, SDL_Surface *charset) {
 	int px, py, c;
@@ -46,6 +47,41 @@ void DrawSurface(SDL_Surface *screen, SDL_Surface *sprite, int x, int y, float s
 	dest.h = sprite->h;
 	
 	SDL_BlitScaled(sprite, NULL, screen, &dest);
+};
+
+void DrawEntityScaledAnimated(SDL_Surface *screen, SDL_Surface *sprite, int x, int y, 
+	float scale, Entity *player) {
+	SDL_Rect src;
+    SDL_Rect dest;
+
+
+	int frameW = 64; 
+    int frameH = 64;
+
+	int row=0;
+	if (player->currentState == ENITY_IDLE) row = 2; 
+    else if (player->currentState == ENTITY_WALKING) row = 11; //
+    else if (player->currentState == ENTITY_ATTACK_LIGHT) row = 15;
+    else if (player->currentState == ENTITY_ATTACK_HEAVY) row = 14;// 65 to ostatni index aatkow w plik
+
+	//animacje dla combo
+	else if (player->currentState == ENTITY_COMBO_TRIPLE_LIGHT) row = 16;
+    else if (player->currentState == ENTITY_COMBO_TRIPLE_HEAVY) row = 17;
+    else if (player->currentState == ENTITY_COMBO_MIXED) row = 18;
+    else if (player->currentState == ENTITY_DASHING) row = 19;
+
+    src.x = player->frame * frameW;
+    src.y = row * frameH;
+    src.w = frameW;
+    src.h = frameH;
+
+    dest.w = (int)(frameW * scale);
+    dest.h = (int)(frameH * scale);
+
+    dest.x = x - dest.w / 2;
+    dest.y = y;
+
+    SDL_BlitScaled(sprite, &src, screen, &dest);
 };
 
 void DrawLine(SDL_Surface *screen, int x, int y, int l, int dx, int dy, Uint32 color) {

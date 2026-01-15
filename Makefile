@@ -12,7 +12,7 @@ setup:
 
 compile:
 	mkdir -p ./compiled
-	gcc -O2 -I./headers `sdl2-config --cflags` -o ./compiled/gra code/main.c code/drawing.c code/loadfiles.c code/player.c `sdl2-config --libs`
+	gcc -O2 -I./headers `sdl2-config --cflags` -o ./compiled/gra code/main.c code/drawing.c code/loadfiles.c code/player.c code/init.c code/combos.c `sdl2-config --libs`
 
 clean:
 	rm -rf ./compiled

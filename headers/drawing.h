@@ -24,5 +24,7 @@ void DrawTexture(
 	float scale, 
 	float rotation_angle,
 	const SDL_RendererFlip flip);
+void DrawEntityScaledAnimated(SDL_Surface *screen, SDL_Surface *sprite, int x, int y, 
+	float scale, Entity *player);
 
 #endif
