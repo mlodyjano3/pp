@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     if (!startGame) {
         // gracz wybralem wyjscie z menu
         gameState.quit = 1;
-    
+	};
 
     //
 	// glowna petla
