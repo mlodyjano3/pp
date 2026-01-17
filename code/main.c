@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
         checkPlayerAttackCollisions(&player, &enemiesData, &gameState);
         scoringUpdate(&gameState, delta);
         
-        enemiesUpdate(&enemiesData, &player, delta);
+        enemiesUpdate(&enemiesData, &player, delta, &gameState);
 
 
 		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
@@ -156,7 +156,14 @@ int main(int argc, char **argv) {
 			Entity* enemy = &enemiesData.enemies[i];
 			
 			if (enemy->health.health > 0) {
-				int fillColor = (enemy->type == ENTITY_ENEMY_WALKER) ? niebieski : czerwony;
+				int fillColor = niebieski;
+				
+				if (enemy->type == ENTITY_ENEMY_WALKER) {
+				    fillColor = niebieski;
+				} else if (enemy->type == ENTITY_ENEMY_CHARGER) {
+				    // czerwony normalnie, żółty gdy szarżuje
+				    fillColor = enemy->chargerData.isCharging ? SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00) : czerwony;
+				}
 				
 				DrawRectangle(screen,
 					(int)enemy->position.x - camera.position.x,

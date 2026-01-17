@@ -74,7 +74,8 @@ typedef enum {
     ENTITY_DASHING,
 
     ENTITY_DUMMY,
-    ENTITY_HIT
+    ENTITY_HIT,
+    ENTITY_CHARGING
 } EntityState;
 
 typedef struct {
@@ -91,6 +92,11 @@ typedef struct {
     float stunTimer;
     float attackCooldown;
 } AttackValues;
+
+typedef struct {
+    float chargeTimer;
+    int isCharging;
+} ChargerData;
 
 typedef struct {
     Position position;
@@ -124,9 +130,13 @@ typedef struct {
     Hitbox hitboxes;
     Hitbox attacking_hitboxes;
     int isCurrentlyAttacking;
+    int isInvicible;
+    float invicibilityTimer;
 
     // punkty
     int wasHitThisAttack;
+
+    ChargerData chargerData;
 } Entity;
 
 typedef struct {

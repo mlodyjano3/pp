@@ -66,6 +66,9 @@
 #define CHARGER_SPEED 40
 #define CHARGER_STUN 1
 #define CHARGER_COOLDOWN 7
+#define CHARGER_DETECT_RANGE 300
+#define CHARGER_CHARGE_SPEED 250
+#define CHARGER_CHARGE_DURATION 1.5f
 //
 
 
@@ -78,7 +81,8 @@
 #define POINTS_COMBO_MIXED 80
 #define COMBO_MULTIPLIER_TIME 3.0f // 3 sekundy na kontynuacje combo
 
-
+#define PLAYER_HIT_DURATION 0.3f // czas animacji trafienia
+#define PLAYER_INVINCIBILITY_TIME 1 // po trafieniu jest nietykalny na PLAYER_inv_time
 
 
 

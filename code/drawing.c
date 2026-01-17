@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include <SDL_main.h>
 #include <../headers/structures.h>
+#include <../headers/combos.h>
 
 void DrawString(SDL_Surface *screen, int x, int y, const char *text, SDL_Surface *charset) {
 	int px, py, c;
@@ -70,6 +71,9 @@ void DrawEntityScaledAnimated(SDL_Surface *screen, SDL_Surface *sprite, int x, i
     else if (player->currentState == ENTITY_COMBO_MIXED) row = 18;
     else if (player->currentState == ENTITY_DASHING) row = 19;
 
+    else if (player->currentState == ENTITY_HIT) row = 2;
+    else if (player->currentState == ENTITY_CHARGING) row = 11;
+
     src.x = player->frame * frameW;
     src.y = row * frameH;
     src.w = frameW;
@@ -80,6 +84,13 @@ void DrawEntityScaledAnimated(SDL_Surface *screen, SDL_Surface *sprite, int x, i
 
     dest.x = x - dest.w / 2;
     dest.y = y;
+
+    if (player->isInvicible) {
+        int visible = ((int)(player->invicibilityTimer * 10)) % 2;
+        if (!visible) {
+            return;
+        }
+    }
 
     SDL_BlitScaled(sprite, &src, screen, &dest);
 };

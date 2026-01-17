@@ -1,5 +1,7 @@
 #include "../headers/structures.h"
 #include "../headers/consts.h"
+#include "../headers/points.h"
+
 #include <stdio.h>
 
 int checkCollision(Hitbox player, Hitbox enemy) {

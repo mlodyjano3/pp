@@ -55,6 +55,9 @@ void playerInitialize(Entity* player, float x, float y, SDL_Surface* tex) {
     player->frame = 0;
     player->animationTimer = 0;
 
+    player->invicibilityTimer = 0;
+    player->isInvicible = 0;
+
     // combosy
     InitInputBuffer(&player->inputBuffer);
     player->activeCombo = COMBO_NONE;
@@ -63,6 +66,14 @@ void playerInitialize(Entity* player, float x, float y, SDL_Surface* tex) {
 void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameState* gameState) {
     const Uint8* state = SDL_GetKeyboardState(NULL);
     static Uint8 prevStateBuffer[SDL_NUM_SCANCODES] = {0};
+
+    if (player->invicibilityTimer > 0) {
+        player->invicibilityTimer -= delta;
+        if (player->invicibilityTimer <= 0) {
+            player->isInvicible = 0;
+            player->invicibilityTimer = 0;
+        }
+    }
 
     // obsluga timera akcji
     if (player->timer > 0) {

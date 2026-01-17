@@ -2,7 +2,7 @@
 #include "../headers/structures.h"
 
 void enemyInitialize(Entity* enemy, SDL_Surface* tex, Entity* player, EntityType enemyType);
-void enemyAttack(Entity* enemy, Entity* player, double delta);
+void enemyAttack(Entity* enemy, Entity* player, double delta, GameState* gameState);
 void enemyUpdatePosition(Entity* enemy, Entity* player, double delta);
-void enemiesUpdate(EnemiesData* enemiesData, Entity* player, double delta);
+void enemiesUpdate(EnemiesData* enemiesData, Entity* player, double delta, GameState* gameState);
 float calcDistance(Entity player, Entity enemy);
