@@ -17,6 +17,13 @@ void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex,
     enemy->position.y = FLOOR_ZERO_Y + 10; // (rand() % (FLOOR_ZERO_Y - min_pos + 1)) + min_pos;
     enemy->position.z = 0;
 
+    if (enemy->position.x < 100) {
+        enemy->position.x = 100;
+    };  
+    if (enemy->position.x > LEVEL_WIDTH - 100) {
+        enemy->position.x = LEVEL_WIDTH - 100;
+    };
+
     enemy->type = enemyType;
     switch (enemyType) {
         case ENTITY_ENEMY_CHARGER: {
@@ -25,6 +32,14 @@ void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex,
 
             enemy->measurements.w = CHARGER_WIDTH;
             enemy->measurements.h = CHARGER_HEIGHT;
+
+            AttackValues attackVal = {
+                CHARGER_DAMAGE,
+                CHARGER_STUN,
+                CHARGER_COOLDOWN
+            };
+            enemy->attackDamage = attackVal;
+            enemy->speed = CHARGER_SPEED;
             break;
         };
         case ENTITY_ENEMY_WALKER: {
@@ -33,6 +48,14 @@ void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex,
 
             enemy->measurements.w = WALKER_WIDTH;
             enemy->measurements.h = WALKER_HEIGHT;
+
+            AttackValues attackVal = {
+                WALKER_DAMAGE,
+                WALKER_STUN,
+                WALKER_COOLDOWN
+            };
+            enemy->attackDamage = attackVal;
+            enemy->speed = WALKER_SPEED;
             break;
         };
         default: break;

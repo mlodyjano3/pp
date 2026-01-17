@@ -74,11 +74,10 @@ int main(int argc, char **argv) {
 	};
 
 	int t1 = SDL_GetTicks();
-	int quit;
+	gameState.quit = 0;
 	int frames = 0;
 	gameState.fpsTimer = 0;
 	gameState.fps = 0;
-	quit = 0;
 	gameState.worldTime = 0;
 	gameState.distance = 0;
 	gameState.etiSpeed = 1;
@@ -94,7 +93,7 @@ int main(int argc, char **argv) {
     //
 	// glowna petla
     //
-	while(!quit) {
+	while(!gameState.quit) {
 		int t2 = SDL_GetTicks();
 		double delta = (t2 - t1) * 0.001;
 		t1 = t2;
@@ -196,7 +195,7 @@ int main(int argc, char **argv) {
                 case SDL_KEYDOWN: {
 					switch (event.key.keysym.sym) {
 						case SDLK_ESCAPE: {
-							quit = 1;
+							gameState.quit = 1;
 							break;
 						} 
 						case SDLK_n: {
@@ -215,7 +214,7 @@ int main(int argc, char **argv) {
 					break;
 				};
                 case SDL_QUIT: { // kasacja gry, okno closed
-                    quit = 1;
+                    gameState.quit = 1;
                     break;
 				};
         	};
