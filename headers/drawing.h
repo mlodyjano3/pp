@@ -26,5 +26,9 @@ void DrawTexture(
 	const SDL_RendererFlip flip);
 void DrawEntityScaledAnimated(SDL_Surface *screen, SDL_Surface *sprite, int x, int y, 
 	float scale, Entity *player);
+void DrawHealthBar(SDL_Surface* screen, int x, int y, int width, int height, 
+                	int currentHP, int maxHP);
+void DrawDevMode(SDL_Surface* screen, SDL_Surface* charset, Entity* player, GameState* gameState);
+
 
 #endif

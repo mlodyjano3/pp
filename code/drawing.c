@@ -126,6 +126,95 @@ void DrawTexture(
 	SDL_RenderCopyEx(renderer, texture, NULL, &destination, rotation_angle, NULL, flip);		
 };
 
+void DrawHealthBar(SDL_Surface* screen, int x, int y, int width, int height, 
+                   int currentHP, int maxHP) {
+    int czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
+    int czerwony = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
+    int zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
+    int zolty = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
+    
+    // oblicz procent HP
+    float hpPercent = (float)currentHP / (float)maxHP;
+    if (hpPercent < 0) hpPercent = 0;
+    if (hpPercent > 1) hpPercent = 1;
+    
+    // wybierz kolor w zaleznosci od HP
+    int fillColor = zielony;
+    if (hpPercent < 0.25f) {
+        fillColor = czerwony;
+    } else if (hpPercent < 0.5f) {
+        fillColor = zolty;
+    }
+    
+    // rysuj tlo (puste HP)
+    DrawRectangle(screen, x, y, width, height, czarny, czerwony);
+    
+    // rysuj wypelnienie (obecne HP)
+    int currentWidth = (int)(width * hpPercent);
+    if (currentWidth > 0) {
+        DrawRectangle(screen, x, y, currentWidth, height, czarny, fillColor);
+    }
+};
+
+void DrawDevMode(SDL_Surface* screen, SDL_Surface* charset, Entity* player, GameState* gameState) {
+    int zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
+    int czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
+    
+    char text[256];
+    int y = 50;
+    
+    // tlo dla dev info
+    DrawRectangle(screen, 10, 45, 300, 150, zielony, czarny);
+    
+    DrawString(screen, 15, y, "=== DEV MODE ===", charset);
+    y += 15;
+    
+    // stan gracza
+    sprintf(text, "Stan: %d", player->currentState);
+    DrawString(screen, 15, y, text, charset);
+    y += 10;
+    
+    // aktywne combo
+    sprintf(text, "Combo: %s", GetComboName(player->activeCombo));
+    DrawString(screen, 15, y, text, charset);
+    y += 10;
+    
+    // bufor inputow
+    sprintf(text, "Bufor (%d):", player->inputBuffer.count);
+    DrawString(screen, 15, y, text, charset);
+    y += 10;
+    
+    for (int i = 0; i < player->inputBuffer.count && i < 5; i++) {
+        char* inputName = "?";
+        switch (player->inputBuffer.buffer[i].type) {
+            case INPUT_ATTACK_LIGHT: inputName = "Q"; break;
+            case INPUT_ATTACK_HEAVY: inputName = "E"; break;
+            case INPUT_MOVE_LEFT: inputName = "<"; break;
+            case INPUT_MOVE_RIGHT: inputName = ">"; break;
+            case INPUT_MOVE_UP: inputName = "^"; break;
+            case INPUT_MOVE_DOWN: inputName = "v"; break;
+            default: inputName = "?"; break;
+        }
+        sprintf(text, " [%d] %s (%.2fs)", i, inputName, 
+                player->inputBuffer.buffer[i].timestamp);
+        DrawString(screen, 15, y, text, charset);
+        y += 10;
+    }
+    
+    // multiplier i punkty
+    y += 5;
+    sprintf(text, "Punkty: %.0f", gameState->score);
+    DrawString(screen, 15, y, text, charset);
+    y += 10;
+    
+    sprintf(text, "Multiplier: x%.1f", gameState->currentMultiplier);
+    DrawString(screen, 15, y, text, charset);
+    y += 10;
+    
+    sprintf(text, "Combo timer: %.1fs", gameState->comboTimer);
+    DrawString(screen, 15, y, text, charset);
+}
+
 
 /*
 void drawAllEnemies(EnemiesData* enemiesData) {

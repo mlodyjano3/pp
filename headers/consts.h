@@ -7,7 +7,7 @@
 
 // proporcje widoku itd
 #define SCREEN_WIDTH	640
-#define SCREEN_HEIGHT	480
+#define SCREEN_HEIGHT	480 // 480
 #define LEVEL_WIDTH 2000
 
 #define BACKGROUND_HEIGHT (SCREEN_HEIGHT / 5) * 2// 2/5 ekranu
@@ -69,5 +69,19 @@
 //
 
 
+
+// punkty
+#define POINTS_LIGHT_ATTACK 10
+#define POINTS_HEAVY_ATTACK 25
+#define POINTS_COMBO_TRIPLE_LIGHT 60
+#define POINTS_COMBO_TRIPLE_HEAVY 100
+#define POINTS_COMBO_MIXED 80
+#define COMBO_MULTIPLIER_TIME 3.0f // 3 sekundy na kontynuacje combo
+
+
+
+
+
+#define IS_PLAYER_ATTACKING_SHORTCUT (player->currentState == ENTITY_ATTACK_LIGHT || player->currentState == ENTITY_ATTACK_HEAVY || player->currentState == ENTITY_COMBO_TRIPLE_LIGHT || player->currentState == ENTITY_COMBO_TRIPLE_HEAVY || player->currentState == ENTITY_COMBO_MIXED)
 
 #endif

@@ -10,6 +10,9 @@
 #include "../headers/player.h"
 #include "../headers/init.h"
 #include "../headers/enemies.h"
+#include "../headers/points.h"
+#include "../headers/menu.h"
+#include "../headers/physics.h"
 
 #include <SDL.h>
 #include <SDL_main.h>
@@ -45,6 +48,7 @@ int main(int argc, char **argv) {
 
 	int groundColor = SDL_MapRGB(screen->format, 0x22, 0x88, 0x22);
 	int skyColor = SDL_MapRGB(screen->format, 0x88, 0xCC, 0xFF);
+
 
 
 	if (LoadFiles(&screen, &charset, &eti, window, renderer, scrtex, &sprite) != 0) {
@@ -90,6 +94,20 @@ int main(int argc, char **argv) {
 	camera.w = SCREEN_WIDTH;
 	camera.h = SCREEN_HEIGHT;
 
+	scoringInitialize(&gameState);
+    
+    // inicjalizacja wrogow - dodaj wasHitThisAttack
+    for (int i = 0; i < enemiesData.enemies_count; i++) {
+        enemiesData.enemies[i].wasHitThisAttack = 0;
+    }
+    
+    // MENU - uruchom przed gra
+    int startGame = menuRun(screen, charset, renderer, scrtex);
+    if (!startGame) {
+        // gracz wybralem wyjscie z menu
+        gameState.quit = 1;
+    
+
     //
 	// glowna petla
     //
@@ -101,7 +119,11 @@ int main(int argc, char **argv) {
 		gameState.worldTime += delta;
 
 		playerUpdate(&player, delta, &enemiesData, &gameState); // update gracza
-		enemiesUpdate(&enemiesData, &player, delta);
+		updatePlayerHitboxes(&player);
+        checkPlayerAttackCollisions(&player, &enemiesData, &gameState);
+        scoringUpdate(&gameState, delta);
+        
+        enemiesUpdate(&enemiesData, &player, delta);
 
 
 		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
@@ -171,19 +193,28 @@ int main(int argc, char **argv) {
 		};
 
 		// interface 
-		DrawRectangle(
-			screen, 
-			4,
-			4, 
-			SCREEN_WIDTH - 8, 
-			36, 
-			czerwony, 
-			niebieski
-		);
-		sprintf(text, "Szablon drugiego zadania, czas trwania = %.1lf s  %.0lf fps ", gameState.worldTime, gameState.fps);
-		DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 10, text, charset);
-		sprintf(text, "Esc - wyjscie, \030 - przyspieszenie, \031 - zwolnienie, n - nowa gra");
-		DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 26, text, charset);
+		DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 50, czerwony, niebieski);
+        
+        // pasek HP gracza
+        DrawHealthBar(screen, 10, 10, 200, 15, player.health.health, player.health.maxHealth);
+        sprintf(text, "HP: %d/%d", player.health.health, player.health.maxHealth);
+        DrawString(screen, 10, 28, text, charset);
+        
+        // punkty i multiplier
+        sprintf(text, "Punkty: %.0f", gameState.score);
+        DrawString(screen, 220, 10, text, charset);
+        
+        sprintf(text, "Combo: x%.1f", gameState.currentMultiplier);
+        DrawString(screen, 220, 20, text, charset);
+        
+        // czas
+        sprintf(text, "Czas: %.1lf s  %.0lf fps", gameState.worldTime, gameState.fps);
+        DrawString(screen, 220, 30, text, charset);
+        
+        // tryb developerski
+        if (gameState.devMode) {
+            DrawDevMode(screen, charset, &player, &gameState);
+        }
 
 		SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch); // screen -> scrtex (ram -> gpu)
 		SDL_RenderCopy(renderer, scrtex, NULL, NULL); // rysuje teksture
@@ -199,13 +230,26 @@ int main(int argc, char **argv) {
 							break;
 						} 
 						case SDLK_n: {
-							// przywracanie stanu poczatkowego poprzez zmiane wartosci w strukturze
-							gameState.worldTime = 0.0;
-							gameState.distance = 0.0;
-							frames = 0;
-							gameState.fpsTimer = 0.0;
-							gameState.etiSpeed = 1.0;
-						}
+                            // przywracanie stanu poczatkowego
+                            gameState.worldTime = 0.0;
+                            gameState.distance = 0.0;
+                            frames = 0;
+                            gameState.fpsTimer = 0.0;
+                            gameState.etiSpeed = 1.0;
+                            
+                            scoringInitialize(&gameState);
+                            
+                            // reset gracza
+                            playerInitialize(&player, 100, FLOOR_ZERO_Y + 10, sprite);
+                            
+                            // reset wrogow
+                            for (int i = 0; i < enemiesData.enemies_count; i++) {
+                                EntityType type = (i % 2 == 0) ? ENTITY_ENEMY_WALKER : ENTITY_ENEMY_CHARGER;
+                                enemyInitialize(&enemiesData.enemies[i], sprite, &player, type);
+                                enemiesData.enemies[i].wasHitThisAttack = 0;
+                            }
+                            break;
+                        }
 						case SDLK_p: { // tryb deva
 							gameState.devMode = !gameState.devMode;
 							break;

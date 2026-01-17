@@ -125,6 +125,8 @@ typedef struct {
     Hitbox attacking_hitboxes;
     int isCurrentlyAttacking;
 
+    // punkty
+    int wasHitThisAttack;
 } Entity;
 
 typedef struct {
