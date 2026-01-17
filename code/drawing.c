@@ -125,3 +125,25 @@ void DrawTexture(
 		
 	SDL_RenderCopyEx(renderer, texture, NULL, &destination, rotation_angle, NULL, flip);		
 };
+
+
+/*
+void drawAllEnemies(EnemiesData* enemiesData) {
+	for (int i =0; i < enemiesData->enemies_count; i++) {
+		Entity* currentEnemy = &enemiesData->enemies[i];
+		if (currentEnemy->health.health > 0) {
+			int color = (currentEnemy->type == ENTITY_ENEMY_WALKER) ? niebieski : czerwony;
+        
+			DrawRectangle(screen,
+				(int)currentEnemy->position.x - camera.position.x,
+				(int)currentEnemy->position.y - enemy->measurements.h,
+				enemy->measurements.w,
+				enemy->measurements.h,
+				czarny,   // outline
+				color     // fill
+			);
+
+		}
+	};
+}
+*/

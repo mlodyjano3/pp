@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 
+	srand(time(NULL));
 
 	int configurationStatus;
 	configurationStatus = configureSDL(&window, &renderer);
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
 
 	Entity enemies[MAX_ENEMIES]; 
 	Entity dummy;
-	enemyInitialize(dummy, sprite);
+	enemyInitialize(&dummy, &sprite, &player, ENTITY_ENEMY_WALKER);
 	enemies[0] = dummy;
 
 	int t1 = SDL_GetTicks();
@@ -96,6 +97,8 @@ int main(int argc, char **argv) {
 		gameState.worldTime += delta;
 
 		playerUpdate(&player, delta); // update gracza
+		enemiesUpdate(&enemies, &player, delta);
+
 
 		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
 		camera.position.y = SCREEN_HEIGHT / 2; // kamera zawsze pozostaje w tym samym miejscu osi y
