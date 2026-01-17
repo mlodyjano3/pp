@@ -27,15 +27,18 @@ void playerInitialize(Entity* player, float x, float y, SDL_Surface* tex) {
     player->vz = 0.0; // brak predkosci pionowej na starcie!
 
     //set width i height spirita
-    player->w = 64;
-    player->h = 64;
+    player->measurements.w = 64;
+    player->measurements.h = 64;
 
     player->direction.x = 0; /// wektor ruchu
     player->direction.y = 0;
 
     player->speed = 200.0f; // pixele na sekunde
-    player->maxHealth = 100;
-    player->health = 100;
+    player->health.maxHealth = 100;
+    player->health.health = 100;
+    if (player->health.health > player->health.maxHealth) {
+        player->health.health = player->health.maxHealth;
+    };
     player->type = ENTITY_PLAYER;
 
     player->onGround = 0;
@@ -206,7 +209,7 @@ void playerUpdate(Entity* player, double delta) {
 
     // obliczanie skali i wysokosci
     player->scale = 0.5f + (player->position.y / (float)SCREEN_HEIGHT);
-    float currentHeight = player->h * player->scale;
+    float currentHeight = player->measurements.h * player->scale;
 
     // ograniczenia ruchu
     if (player->position.y + currentHeight < FLOOR_ZERO_Y) {
@@ -218,8 +221,8 @@ void playerUpdate(Entity* player, double delta) {
     if (player->position.x < 0) {
         player->position.x = 0;
     }
-    if (player->position.x > LEVEL_WIDTH - player->w) {
-        player->position.x = LEVEL_WIDTH - player->w;
+    if (player->position.x > LEVEL_WIDTH - player->measurements.w) {
+        player->position.x = LEVEL_WIDTH - player->measurements.h;
     }
 
     // zapisz stan klawiszy na nastepna klatke

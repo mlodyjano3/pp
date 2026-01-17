@@ -9,6 +9,7 @@
 #include "../headers/consts.h"
 #include "../headers/player.h"
 #include "../headers/init.h"
+#include "../headers/enemies.h"
 
 #include <SDL.h>
 #include <SDL_main.h>
@@ -24,6 +25,7 @@ int main(int argc, char **argv) {
 	SDL_Texture *scrtex;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+
 
 	int configurationStatus;
 	configurationStatus = configureSDL(&window, &renderer);
@@ -60,6 +62,11 @@ int main(int argc, char **argv) {
 		sprite
 	);
 
+	Entity enemies[MAX_ENEMIES]; 
+	Entity dummy;
+	enemyInitialize(dummy, sprite);
+	enemies[0] = dummy;
+
 	int t1 = SDL_GetTicks();
 	int quit;
 	int frames = 0;
@@ -90,7 +97,7 @@ int main(int argc, char **argv) {
 
 		playerUpdate(&player, delta); // update gracza
 
-		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.w / 2); // logika positioningu kamery na osi x
+		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
 		camera.position.y = SCREEN_HEIGHT / 2; // kamera zawsze pozostaje w tym samym miejscu osi y
 
 		if (camera.position.x < 0) {
@@ -109,10 +116,19 @@ int main(int argc, char **argv) {
 		// rysowanie gracza
 		player.scale = 0.5f + (player.position.y / (float)SCREEN_HEIGHT); // skala w zaleznosci od polozenia y
 		DrawEntityScaledAnimated(screen, player.tex, 
-			(int)player.position.x - camera.position.x + (player.w / 2),
+			(int)player.position.x - camera.position.x + (player.measurements.w / 2),
 			(int)player.position.y - player.position.z,
 			player.scale,
 			&player
+		);
+
+		DrawRectangle(screen, 
+			(int)dummy.position.x - camera.position.x,
+			(int)dummy.position.y - dummy.measurements.h,
+			dummy.measurements.w,
+			dummy.measurements.h,
+			czerwony,  // outline
+			zielony    // fill - zielony gdy zdrowy
 		);
 
         
@@ -162,7 +178,7 @@ int main(int argc, char **argv) {
 							gameState.etiSpeed = 1.0;
 						}
 						case SDLK_p: { // tryb deva
-							player.devMode = !player.devMode;
+							gameState.devMode = !gameState.devMode;
 							break;
 						}
 					};

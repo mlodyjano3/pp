@@ -23,7 +23,7 @@ void AddInput(InputBuffer* buffer, InputType type, float currentTime) {
             }
             validCount++;
         }
-    }
+    };
     buffer->count = validCount;
 
     if (buffer->count < INPUT_BUFFER_SIZE) {

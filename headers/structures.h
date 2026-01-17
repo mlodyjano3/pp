@@ -8,6 +8,14 @@
 #define INPUT_BUFFER_SIZE 10
 #define COMBO_TIMEOUT 0.5f  // czas w sek na perform combo
 
+///
+// hitboxy i wszystko co z nimi zwiazane
+///
+typedef struct {
+    float x, y;
+    float w, h;
+} Hitbox;
+
 // typy combosow
 typedef enum {
     INPUT_NONE = 0,
@@ -63,20 +71,38 @@ typedef enum {
     ENTITY_COMBO_TRIPLE_LIGHT,
     ENTITY_COMBO_TRIPLE_HEAVY,
     ENTITY_COMBO_MIXED,
-    ENTITY_DASHING
+    ENTITY_DASHING,
+
+    ENTITY_DUMMY,
+    ENTITY_HIT
 } EntityState;
 
 typedef struct {
-    Position position;
-    int w, h;
-    Direction direction;
-
-    float speed; 
     int health;
     int maxHealth;
-    int onGround;
+} Health;
+
+typedef struct {
+    int w, h;
+} Measurements;
+
+typedef struct {
+    int damage;
+    float stunTimer;
+    float attackCooldown;
+} AttackValues;
+
+typedef struct {
+    Position position;
+    Direction direction;
+
+    Measurements measurements;
+    Health health;
+    AttackValues attackDamage;
+    float speed; 
+    int onGround; // bool
     int frame;
-    int facingLeft;
+    int facingLeft; // bool wartosci
     float scale;
     
     float jumpHeight;
@@ -92,8 +118,19 @@ typedef struct {
     // system combo podpunkt B
     InputBuffer inputBuffer;
     ComboType activeCombo;
-    int devMode; // tryb deva
+
+
+    // hitboxy
+    Hitbox hitboxes;
+    Hitbox attacking_hitboxes;
+    int isCurrentlyAttacking;
+
 } Entity;
+
+typedef struct {
+    Entity enemies[MAX_ENEMIES];
+    int enemies_count;
+} EnemiesData;
 
 typedef struct { 
     Position position;
@@ -108,6 +145,13 @@ typedef struct {
     double distance;
     double etiSpeed;
     int quit;
+
+    float score;
+    float currentMultiplier;
+    float comboTimer;
+
+    int devMode;
 } GameState;
+
 
 #endif
