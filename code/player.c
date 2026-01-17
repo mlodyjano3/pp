@@ -2,6 +2,12 @@
 #include "../headers/consts.h"
 #include "../headers/combos.h"
 
+void isPlayerAlive(Entity *player, GameState *gameState) {
+    if (player->health.health <= 0) {
+        gameState->quit = 1;
+    };
+};
+
 void UpdatePlayerAnimation(Entity *player, double deltaTime) {
     player->animationTimer += (float)deltaTime;
 
@@ -52,10 +58,9 @@ void playerInitialize(Entity* player, float x, float y, SDL_Surface* tex) {
     // combosy
     InitInputBuffer(&player->inputBuffer);
     player->activeCombo = COMBO_NONE;
-    player->devMode = 0;
 };
 
-void playerUpdate(Entity* player, double delta) {
+void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameState* gameState) {
     const Uint8* state = SDL_GetKeyboardState(NULL);
     static Uint8 prevStateBuffer[SDL_NUM_SCANCODES] = {0};
 
@@ -224,6 +229,8 @@ void playerUpdate(Entity* player, double delta) {
     if (player->position.x > LEVEL_WIDTH - player->measurements.w) {
         player->position.x = LEVEL_WIDTH - player->measurements.h;
     }
+
+    isPlayerAlive(player, gameState);
 
     // zapisz stan klawiszy na nastepna klatke
     for (int i = 0; i < SDL_NUM_SCANCODES; i++) {

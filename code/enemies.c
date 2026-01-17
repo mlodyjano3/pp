@@ -17,7 +17,7 @@ void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex,
     enemy->position.y = FLOOR_ZERO_Y + 10; // (rand() % (FLOOR_ZERO_Y - min_pos + 1)) + min_pos;
     enemy->position.z = 0;
 
-    enemy->type = ENTITY_DUMMY;
+    enemy->type = enemyType;
     switch (enemyType) {
         case ENTITY_ENEMY_CHARGER: {
             enemy->health.maxHealth = CHARGER_MAX_HP;
@@ -35,6 +35,7 @@ void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex,
             enemy->measurements.h = WALKER_HEIGHT;
             break;
         };
+        default: break;
     };
 
     enemy->currentState = ENTITY_DUMMY;
@@ -55,36 +56,42 @@ float calcDistance(Entity player, Entity enemy) {
 
 
 
-void enemyAttack(Entity *enemy, Entity* player, double delta) {
-    if (enemy->health.health <= 0){
-        return;
-    };
-    float distanceToPlayer = calcDistance(*player, *enemy);
+void enemyAttack(Entity* enemy, Entity* player, double delta) {
+    if (enemy->health.health <= 0) return; // martwy nie atakuje
+    
+    float distanceToPlayer = sqrt(
+        pow(enemy->position.x - player->position.x, 2) + 
+        pow(enemy->position.y - player->position.y, 2)
+    );
 
     if (enemy->type == ENTITY_ENEMY_CHARGER && distanceToPlayer < CHARGER_ATTACK_RANGE) {
+        // Charger robi samobójczy atak tylko raz
         if (!enemy->isCurrentlyAttacking) {
             player->health.health -= enemy->attackDamage.damage;
-            enemy->health.health = 0;
+            enemy->health.health = 0; // kamikaze
             enemy->isCurrentlyAttacking = 1;
-            printf("Charger attacked! Player HP: %d\n", player->health.health);
-        };
-    };
+            printf("CHARGER EXPLODED! Player HP: %d\n", player->health.health);
+        }
+    }
+    
     if (enemy->type == ENTITY_ENEMY_WALKER && distanceToPlayer < WALKER_ATTACK_RANGE) {
+        // Walker atakuje co WALKER_ATTACK_COUNTDOWN sekund
         if (enemy->attackDamage.attackCooldown <= 0) {
             player->health.health -= enemy->attackDamage.damage;
             enemy->attackDamage.attackCooldown = WALKER_ATTACK_COUNTDOWN;
             enemy->isCurrentlyAttacking = 1;
-            printf("Walker attacked! Player HP: %d\n", player->health.health);
+            printf("WALKER HIT! Player HP: %d\n", player->health.health);
         }
-    };
-
+    }
+    
+    // Zmniejszaj cooldown
     if (enemy->attackDamage.attackCooldown > 0) {
         enemy->attackDamage.attackCooldown -= delta;
         if (enemy->attackDamage.attackCooldown <= 0) {
             enemy->isCurrentlyAttacking = 0;
-        };
-    };
-};
+        }
+    }
+}
 
 void enemyUpdatePosition(Entity* enemy, Entity* player, double delta) {
     if (enemy->health.health <= 0) {
@@ -118,7 +125,12 @@ void enemyUpdatePosition(Entity* enemy, Entity* player, double delta) {
         case ENTITY_ENEMY_CHARGER: {
                 
         };
-    }
+        default: break;
+    };
+    enemy->hitboxes.x = enemy->position.x;
+    enemy->hitboxes.y = enemy->position.y - enemy->measurements.h;
+    enemy->hitboxes.w = enemy->measurements.w;
+    enemy->hitboxes.h = enemy->measurements.h;
 }
 
 

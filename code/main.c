@@ -63,10 +63,15 @@ int main(int argc, char **argv) {
 		sprite
 	);
 
-	Entity enemies[MAX_ENEMIES]; 
-	Entity dummy;
-	enemyInitialize(&dummy, &sprite, &player, ENTITY_ENEMY_WALKER);
-	enemies[0] = dummy;
+
+	// napraw
+	EnemiesData enemiesData;
+	enemiesData.enemies_count = 5;
+
+	for (int i = 0; i < enemiesData.enemies_count; i++) {
+		EntityType type = (i % 2 == 0) ? ENTITY_ENEMY_WALKER : ENTITY_ENEMY_CHARGER;
+		enemyInitialize(&enemiesData.enemies[i], sprite, &player, type);
+	};
 
 	int t1 = SDL_GetTicks();
 	int quit;
@@ -96,8 +101,8 @@ int main(int argc, char **argv) {
 
 		gameState.worldTime += delta;
 
-		playerUpdate(&player, delta); // update gracza
-		enemiesUpdate(&enemies, &player, delta);
+		playerUpdate(&player, delta, &enemiesData, &gameState); // update gracza
+		enemiesUpdate(&enemiesData, &player, delta);
 
 
 		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
@@ -125,14 +130,36 @@ int main(int argc, char **argv) {
 			&player
 		);
 
-		DrawRectangle(screen, 
-			(int)dummy.position.x - camera.position.x,
-			(int)dummy.position.y - dummy.measurements.h,
-			dummy.measurements.w,
-			dummy.measurements.h,
-			czerwony,  // outline
-			zielony    // fill - zielony gdy zdrowy
-		);
+		// rysowanie wrogow
+		for (int i = 0; i < enemiesData.enemies_count; i++) {
+			Entity* enemy = &enemiesData.enemies[i];
+			
+			if (enemy->health.health > 0) {
+				int fillColor = (enemy->type == ENTITY_ENEMY_WALKER) ? niebieski : czerwony;
+				
+				DrawRectangle(screen,
+					(int)enemy->position.x - camera.position.x,
+					(int)enemy->position.y - enemy->measurements.h,
+					enemy->measurements.w,
+					enemy->measurements.h,
+					czarny,
+					fillColor
+				);
+				
+				// Pasek HP
+				int hpBarWidth = enemy->measurements.w;
+				int currentHpWidth = (int)(hpBarWidth * ((float)enemy->health.health / enemy->health.maxHealth));
+				
+				DrawRectangle(screen,
+					(int)enemy->position.x - camera.position.x,
+					(int)enemy->position.y - enemy->measurements.h - 8,
+					currentHpWidth,
+					4,
+					czarny,
+					zielony
+				);
+			}
+		}
 
         
 
