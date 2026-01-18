@@ -28,11 +28,17 @@ int main(int argc, char **argv) {
 	SDL_Texture *scrtex;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+	SDL_Rect skyRectangle = {0, 0, SCREEN_WIDTH, BACKGROUND_HEIGHT};
+	SDL_Rect groundRectangle = { 0,FLOOR_ZERO_Y, SCREEN_WIDTH, FLOOR_HEIGHT};
+
+	Camera camera;
+	EnemiesData enemiesData;
+	GameState gameState;
+	Entity player;
 
 	srand(time(NULL));
 
-	int configurationStatus;
-	configurationStatus = configureSDL(&window, &renderer);
+	int configurationStatus = configureSDL(&window, &renderer);
 	if (configurationStatus != 0) {
 		return 1;
 	};
@@ -41,14 +47,8 @@ int main(int argc, char **argv) {
 	scrtex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING,SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	char text[128];
-	int czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
-	int zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
-	int czerwony = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
-	int niebieski = SDL_MapRGB(screen->format, 0x11, 0x11, 0xCC);
-
-	int groundColor = SDL_MapRGB(screen->format, 0x22, 0x88, 0x22);
-	int skyColor = SDL_MapRGB(screen->format, 0x88, 0xCC, 0xFF);
-
+	int czarny, zielony, czerwony, niebieski, groundColor, skyColor;
+	initColors(&czarny, &zielony, &czerwony, &niebieski, &groundColor, &skyColor, &screen);
 
 
 	if (LoadFiles(&screen, &charset, &eti, window, renderer, scrtex, &sprite) != 0) {
@@ -57,9 +57,6 @@ int main(int argc, char **argv) {
     }
 	SDL_SetColorKey(charset, SDL_TRUE, 0x000000);
 
-	GameState gameState;
-	Entity player;
-
 	playerInitialize(
 		&player, 
 		100,
@@ -67,9 +64,7 @@ int main(int argc, char **argv) {
 		sprite
 	);
 
-
 	// napraw
-	EnemiesData enemiesData;
 	enemiesData.enemies_count = 5;
 
 	for (int i = 0; i < enemiesData.enemies_count; i++) {
@@ -78,21 +73,9 @@ int main(int argc, char **argv) {
 	};
 
 	int t1 = SDL_GetTicks();
-	gameState.quit = 0;
 	int frames = 0;
-	gameState.fpsTimer = 0;
-	gameState.fps = 0;
-	gameState.worldTime = 0;
-	gameState.distance = 0;
-	gameState.etiSpeed = 1;
-	gameState.quit = 0;
-
-
-	Camera camera;
-	camera.position.x = 0;
-	camera.position.y = 0;
-	camera.w = SCREEN_WIDTH;
-	camera.h = SCREEN_HEIGHT;
+	
+	initVariables(&gameState, &camera);
 
 	scoringInitialize(&gameState);
     
@@ -119,11 +102,11 @@ int main(int argc, char **argv) {
 		gameState.worldTime += delta;
 
 		playerUpdate(&player, delta, &enemiesData, &gameState); // update gracza
-		updatePlayerHitboxes(&player);
-        checkPlayerAttackCollisions(&player, &enemiesData, &gameState);
-        scoringUpdate(&gameState, delta);
-        
-        enemiesUpdate(&enemiesData, &player, delta, &gameState);
+		updatePlayerHitboxes(&player); /// update hitboxow gracza
+        checkPlayerAttackCollisions(&player, &enemiesData, &gameState); // sprawdzanie atak hitboxow gracza
+        scoringUpdate(&gameState, delta); // update punktow
+        enemiesUpdate(&enemiesData, &player, delta, &gameState); // update przeciwnikow
+		
 
 
 		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
@@ -137,8 +120,6 @@ int main(int argc, char **argv) {
         };
 
 		// podstawa + niebo
-		SDL_Rect skyRectangle = {0, 0, SCREEN_WIDTH, BACKGROUND_HEIGHT};
-		SDL_Rect groundRectangle = { 0,FLOOR_ZERO_Y, SCREEN_WIDTH, FLOOR_HEIGHT};
 		SDL_FillRect(screen, &skyRectangle, skyColor);
 		SDL_FillRect(screen, &groundRectangle, groundColor);
 
