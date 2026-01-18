@@ -174,5 +174,12 @@ typedef struct {
     SDL_Texture* scrtex;
 } AppResources;
 
+typedef enum {
+    MENU_START_GAME,
+    MENU_HIGHSCORES,
+    MENU_EXIT,
+    MENU_OPTIONS_COUNT
+} MenuOption;
+
 
 #endif

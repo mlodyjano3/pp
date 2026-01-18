@@ -36,6 +36,9 @@ int main(int argc, char **argv) {
 	GameState gameState;
 	Entity player;
 
+	int t1 = SDL_GetTicks();
+	int frames = 0;
+
 	srand(time(NULL));
 
 	int configurationStatus = configureSDL(&appResources.window, &appResources.renderer);
@@ -72,9 +75,6 @@ int main(int argc, char **argv) {
 		enemyInitialize(&enemiesData.enemies[i], appResources.sprite, &player, type);
 	};
 
-	int t1 = SDL_GetTicks();
-	int frames = 0;
-	
 	initVariables(&gameState, &camera);
 
 	scoringInitialize(&gameState);
@@ -85,7 +85,10 @@ int main(int argc, char **argv) {
     }
     
 	// menu dla gracza
-    int startGame = menuRun(appResources.screen, charset, appResources.renderer, appResources.scrtex);
+    int startGame = menuRun(
+		appResources.screen, charset, appResources.renderer, appResources.scrtex, 
+		czerwony, niebieski, zielony, czarny
+	);
     if (!startGame) {
         // gracz wybralem wyjscie z menu
         gameState.quit = 1;

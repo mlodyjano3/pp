@@ -63,10 +63,80 @@ void playerInitialize(Entity* player, float x, float y, SDL_Surface* tex) {
     player->activeCombo = COMBO_NONE;
 };
 
-void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameState* gameState) {
-    const Uint8* state = SDL_GetKeyboardState(NULL);
-    static Uint8 prevStateBuffer[SDL_NUM_SCANCODES] = {0};
 
+void playerhandleJump(Entity *player, Uint8* state, double delta) {
+    if (state[SDL_SCANCODE_SPACE] && player->position.z == 0) {
+        player->currentState = ENTITY_JUMPING;
+        player->vz = 300.0f;
+    }
+    
+    float gravity = 500;
+    player->position.z += player->vz * delta;
+    if (player->position.z > 0 || player->vz > 0) {
+        player->vz -= gravity * delta;
+    }
+    
+    if (player->position.z < 0) {
+        player->position.z = 0;
+        player->vz = 0;
+        player->currentState = ENITY_IDLE;
+    }
+};
+
+void playerHandleMove(Entity *player, Uint8* state, double delta) {
+    if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A]) {
+        player->direction.x = -1;
+        player->facingLeft = 1;
+        player->currentState = ENTITY_WALKING;
+    }
+    else if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D]) {
+        player->direction.x = 1;
+        player->facingLeft = 0;
+        player->currentState = ENTITY_WALKING;
+    } else {
+        if (player->position.z == 0) player->currentState = ENITY_IDLE;
+    }
+
+    if (state[SDL_SCANCODE_UP] || state[SDL_SCANCODE_W]) {
+        player->direction.y = -1;
+    }
+    if (state[SDL_SCANCODE_DOWN] || state[SDL_SCANCODE_S]) {
+        player->direction.y = 1;
+    }
+
+    UpdatePlayerAnimation(player, delta);
+};
+
+void playerRespectBoundaries(Entity* player, float currentHeight) {
+    if (player->position.y + currentHeight < FLOOR_ZERO_Y) {
+        player->position.y = FLOOR_ZERO_Y - currentHeight;
+    }
+    if (player->position.y + currentHeight > SCREEN_HEIGHT) {
+        player->position.y = SCREEN_HEIGHT - currentHeight;
+    }
+    if (player->position.x < 0) {
+        player->position.x = 0;
+    }
+    if (player->position.x > LEVEL_WIDTH - player->measurements.w) {
+        player->position.x = LEVEL_WIDTH - player->measurements.h;
+    }
+};
+
+void playerHandleBasicAttacks(Entity *player ,Uint8* state) {
+        if (state[SDL_SCANCODE_Q]) {
+            player->currentState = ENTITY_ATTACK_LIGHT;
+            player->timer = 0.3f;
+            player->frame = 0;
+        }
+        if (state[SDL_SCANCODE_E]) {
+            player->currentState = ENTITY_ATTACK_HEAVY;
+            player->timer = 0.7f;
+            player->frame = 0;
+        }
+};
+
+void playerUpdateTimers(Entity *player, double delta ) {
+    // nietykalnosc
     if (player->invicibilityTimer > 0) {
         player->invicibilityTimer -= delta;
         if (player->invicibilityTimer <= 0) {
@@ -112,15 +182,18 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
             player->activeCombo = COMBO_NONE;
         }
     }
+};
 
-    int isAttacking = (player->currentState == ENTITY_ATTACK_LIGHT || 
-                       player->currentState == ENTITY_ATTACK_HEAVY ||
-                       player->currentState == ENTITY_COMBO_TRIPLE_LIGHT ||
-                       player->currentState == ENTITY_COMBO_TRIPLE_HEAVY ||
-                       player->currentState == ENTITY_COMBO_MIXED ||
-                       player->currentState == ENTITY_DASHING);
+int playerIsAttacking(Entity* player) {
+    return (player->currentState == ENTITY_ATTACK_LIGHT || 
+            player->currentState == ENTITY_ATTACK_HEAVY ||
+            player->currentState == ENTITY_COMBO_TRIPLE_LIGHT ||
+            player->currentState == ENTITY_COMBO_TRIPLE_HEAVY ||
+            player->currentState == ENTITY_COMBO_MIXED ||
+            player->currentState == ENTITY_DASHING);
+};
 
-    // wykrywanie nowych wcisnieć (edge detection)
+void playerDetectKeys(Uint8* state, Entity* player, Uint8* prevStateBuffer, float currentTime) {
     int qPressed = state[SDL_SCANCODE_Q] && !prevStateBuffer[SDL_SCANCODE_Q];
     int ePressed = state[SDL_SCANCODE_E] && !prevStateBuffer[SDL_SCANCODE_E];
     int leftPressed = (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A]) && 
@@ -128,8 +201,7 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
     int rightPressed = (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D]) && 
                        !(prevStateBuffer[SDL_SCANCODE_RIGHT] || prevStateBuffer[SDL_SCANCODE_D]);
 
-    // dodawanie inputow do bufora
-    float currentTime = (float)SDL_GetTicks() / 1000.0f;
+    // dodaj do bufora combo
     if (qPressed && player->position.z == 0) {
         AddInput(&player->inputBuffer, INPUT_ATTACK_LIGHT, currentTime);
     }
@@ -142,6 +214,20 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
     if (rightPressed) {
         AddInput(&player->inputBuffer, INPUT_MOVE_RIGHT, currentTime);
     }
+}
+
+
+void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameState* gameState) {
+    const Uint8* state = SDL_GetKeyboardState(NULL);
+    static Uint8 prevStateBuffer[SDL_NUM_SCANCODES] = {0};
+
+    playerUpdateTimers(&player, delta);
+
+    int isAttacking = playerIsAttacking(&player);
+
+    // dodawanie inputow do bufora
+    float currentTime = (float)SDL_GetTicks() / 1000;
+    playerDetectKeys(state, &player, prevStateBuffer, currentTime);
 
     // sprawdzanie combo
     ComboType detectedCombo = checkCombo(&player->inputBuffer, currentTime);
@@ -156,61 +242,16 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
  
     // obsluga ruchu (tylko gdy nie atakujemy)
     if (!isAttacking) {
-        if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A]) {
-            player->direction.x = -1;
-            player->facingLeft = 1;
-            player->currentState = ENTITY_WALKING;
-        }
-        else if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D]) {
-            player->direction.x = 1;
-            player->facingLeft = 0;
-            player->currentState = ENTITY_WALKING;
-        }
-        else {
-            if (player->position.z == 0) player->currentState = ENITY_IDLE;
-        }
-
-        if (state[SDL_SCANCODE_UP] || state[SDL_SCANCODE_W]) {
-            player->direction.y = -1;
-        }
-        if (state[SDL_SCANCODE_DOWN] || state[SDL_SCANCODE_S]) {
-            player->direction.y = 1;
-        }
-
-        UpdatePlayerAnimation(player, delta);
+        playerHandleMove(&player, state, delta);
     }
 
     // skoki
-    if (state[SDL_SCANCODE_SPACE] && player->position.z == 0) {
-        player->currentState = ENTITY_JUMPING;
-        player->vz = 300.0f;
-    }
-    
-    float gravity = 500;
-    player->position.z += player->vz * delta;
-    if (player->position.z > 0 || player->vz > 0) {
-        player->vz -= gravity * delta;
-    }
-    
-    if (player->position.z < 0) {
-        player->position.z = 0;
-        player->vz = 0;
-        player->currentState = ENITY_IDLE;
-    }
+    playerhandleJump(&player, state, delta);
 
     // ataki podstawowe (tylko gdy nie ma combo)
     if (!isAttacking && player->position.z == 0) {
-        if (state[SDL_SCANCODE_Q]) {
-            player->currentState = ENTITY_ATTACK_LIGHT;
-            player->timer = 0.3f;
-            player->frame = 0;
-        }
-        if (state[SDL_SCANCODE_E]) {
-            player->currentState = ENTITY_ATTACK_HEAVY;
-            player->timer = 0.7f;
-            player->frame = 0;
-        }
-    }
+        playerHandleBasicAttacks(&player, state);
+    };
 
     // ruch gracza
     if (!isAttacking) {
@@ -228,19 +269,9 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
     float currentHeight = player->measurements.h * player->scale;
 
     // ograniczenia ruchu
-    if (player->position.y + currentHeight < FLOOR_ZERO_Y) {
-        player->position.y = FLOOR_ZERO_Y - currentHeight;
-    }
-    if (player->position.y + currentHeight > SCREEN_HEIGHT) {
-        player->position.y = SCREEN_HEIGHT - currentHeight;
-    }
-    if (player->position.x < 0) {
-        player->position.x = 0;
-    }
-    if (player->position.x > LEVEL_WIDTH - player->measurements.w) {
-        player->position.x = LEVEL_WIDTH - player->measurements.h;
-    }
+    playerRespectBoundaries(&player, currentHeight);
 
+    // 
     isPlayerAlive(player, gameState);
 
     // zapisz stan klawiszy na nastepna klatke

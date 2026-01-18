@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 
-int menuRun(SDL_Surface* screen, SDL_Surface* charset, SDL_Renderer* renderer, SDL_Texture* scrtex);
+int menuRun(SDL_Surface* screen, SDL_Surface* charset, SDL_Renderer* renderer, SDL_Texture* scrtex,
+            int czerwony,int  niebieski,int zielony,int czarny);
 
 #endif
