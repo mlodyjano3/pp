@@ -66,6 +66,14 @@ void updatePlayerHitboxes(Entity* player) {
 void checkPlayerAttackCollisions(Entity* player, EnemiesData* enemiesData, GameState* gameState) {
     // sprawdz czy gracz w ogole atakuje
     int isAttacking = (IS_PLAYER_ATTACKING_SHORTCUT);
+
+    if (!isAttacking) {
+        player->isCurrentlyAttacking = 0;
+        for (int i = 0; i < enemiesData->enemies_count; i++) {
+            enemiesData->enemies[i].wasHitThisAttack = 0;
+        }
+        return;
+    }
     
     if (!isAttacking) {
         player->isCurrentlyAttacking = 0;
@@ -115,11 +123,6 @@ void checkPlayerAttackCollisions(Entity* player, EnemiesData* enemiesData, GameS
             scoringOnEnemyHit(gameState, player);
             
             printf("Trafiono wroga! HP: %d, Obrazenia: %d\n", enemy->health.health, damage);
-        }
-    };
-    if (!isAttacking) {
-        for (int i = 0; i < enemiesData->enemies_count; i++) {
-            enemiesData->enemies[i].wasHitThisAttack = 0;
         }
     };
 };

@@ -103,7 +103,9 @@ float calcDistance(Entity player, Entity enemy) {
 }
 
 void enemyAttack(Entity* enemy, Entity* player, double delta, GameState* gameState) {
-    if (enemy->health.health <= 0) return;
+    if (enemy->health.health <= 0) {
+        return;
+    };
     
     // nie atakuj jezeli gracz jest nietykalny
     if (player->isInvicible) return;
