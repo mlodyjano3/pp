@@ -64,7 +64,6 @@ void updatePlayerHitboxes(Entity* player) {
 }
 
 void checkPlayerAttackCollisions(Entity* player, EnemiesData* enemiesData, GameState* gameState) {
-    // sprawdz czy gracz w ogole atakuje
     int isAttacking = (IS_PLAYER_ATTACKING_SHORTCUT);
 
     if (!isAttacking) {
@@ -75,34 +74,24 @@ void checkPlayerAttackCollisions(Entity* player, EnemiesData* enemiesData, GameS
         return;
     }
     
-    if (!isAttacking) {
-        player->isCurrentlyAttacking = 0;
-        return;
-    }
-    
-    // jezeli dopiero zaczal atak, resetuj flage
     if (player->isCurrentlyAttacking == 0) {
         player->isCurrentlyAttacking = 1;
     }
     
-    // przejdz przez wszystkich wrogow
     for (int i = 0; i < enemiesData->enemies_count; i++) {
         Entity* enemy = &enemiesData->enemies[i];
         
-        // pomijamy martwych
+        // POPRAWKA: <= 0 zamiast == 0
         if (enemy->health.health <= 0) {
             continue;
         }
         
-        // sprawdz kolizje miedzy hitboxem ataku a wrogiem
         if (checkCollision(player->attacking_hitboxes, enemy->hitboxes)) {
-            // jezeli juz trafil w tej animacji, nie bij ponownie
             if (enemy->wasHitThisAttack == 1) {
                 continue;
             }
             
-            // oblicz obrazenia
-            int damage = 10; // bazowe obrazenia
+            int damage = 10;
             
             if (player->currentState == ENTITY_ATTACK_LIGHT) {
                 damage = 15;
@@ -116,16 +105,22 @@ void checkPlayerAttackCollisions(Entity* player, EnemiesData* enemiesData, GameS
                 damage = 65;
             }
             
-            // zadaj obrazenia
             enemy->health.health -= damage;
-            enemy->wasHitThisAttack = 1; // oznacz ze zostal trafiony
             
+            // POPRAWKA: Ogranicz HP do 0
+            if (enemy->health.health < 0) {
+                enemy->health.health = 0;
+            }
+            
+            enemy->wasHitThisAttack = 1;
             scoringOnEnemyHit(gameState, player);
             
             printf("Trafiono wroga! HP: %d, Obrazenia: %d\n", enemy->health.health, damage);
         }
-    };
+    }
 };
+
+
 
 void cameraUpdate(Camera* camera, Entity player) {
     camera->position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x

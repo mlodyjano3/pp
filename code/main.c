@@ -23,7 +23,6 @@ int main(int argc, char **argv) {
 	// inicjalizacje wszelkie
 
 	SDL_Event event;
-	SDL_Surface *eti;
 	SDL_Surface *charset;
 
 	AppResources appResources;
@@ -54,7 +53,7 @@ int main(int argc, char **argv) {
 	initColors(&czarny, &zielony, &czerwony, &niebieski, &groundColor, &skyColor, appResources.screen);
 
 
-	if (LoadFiles(&appResources.screen, &charset, &eti, appResources.window, appResources.renderer, appResources.scrtex, &appResources.sprite) != 0) {
+	if (LoadFiles(&appResources.screen, &charset, appResources.window, appResources.renderer, appResources.scrtex, &appResources.sprite) != 0) {
         printf("Blad ladowania plikow!\n");
         return 1; 
     }

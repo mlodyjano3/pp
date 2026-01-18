@@ -115,6 +115,10 @@ void enemyAttack(Entity* enemy, Entity* player, double delta, GameState* gameSta
     if (enemy->type == ENTITY_ENEMY_CHARGER && distanceToPlayer < CHARGER_ATTACK_RANGE) {
         if (!enemy->isCurrentlyAttacking) {
             player->health.health -= enemy->attackDamage.damage;
+            if (player->health.health < 0 ) {
+                player->health.health = 0;
+            };
+
             enemy->health.health = 0; // kamikaze
             enemy->isCurrentlyAttacking = 1;
             
@@ -135,6 +139,9 @@ void enemyAttack(Entity* enemy, Entity* player, double delta, GameState* gameSta
         // Walker atakuje co WALKER_ATTACK_COUNTDOWN sekund
         if (enemy->attackDamage.attackCooldown <= 0) {
             player->health.health -= enemy->attackDamage.damage;
+            if (player->health.health < 0) {
+                player->health.health = 0;
+            };
             enemy->attackDamage.attackCooldown = WALKER_ATTACK_COUNTDOWN;
             enemy->isCurrentlyAttacking = 1;
             

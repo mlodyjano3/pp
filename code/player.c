@@ -218,6 +218,14 @@ void playerDetectKeys(const Uint8* state, Entity* player, const Uint8* prevState
 
 
 void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameState* gameState) {
+    if (player->health.health <= 0) {
+        player->health.health = 0;
+        player->currentState = ENITY_IDLE;
+        player->direction.x = 0;
+        player->direction.y = 0;
+        gameState->quit = 1;
+        return;
+    }
     const Uint8* state = SDL_GetKeyboardState(NULL);
     static Uint8 prevStateBuffer[SDL_NUM_SCANCODES] = {0};
 

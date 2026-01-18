@@ -374,6 +374,13 @@ void drawEnemies(
             
             int hpBarWidth = enemy->measurements.w;
             int currentHpWidth = (int)(hpBarWidth * ((float)enemy->health.health / enemy->health.maxHealth));
+            if (currentHpWidth < 0) {
+                currentHpWidth = 0;
+            };
+            if (currentHpWidth > hpBarWidth) {
+                currentHpWidth = hpBarWidth;
+            };
+
             
             DrawRectangle(screen,
                 (int)enemy->position.x - camera->position.x,
