@@ -9,11 +9,11 @@ void scoringInitialize(GameState* gameState) {
 }
 
 void scoringUpdate(GameState* gameState, double delta) {
-    // zmniejszaj timer combo
+
     if (gameState->comboTimer > 0) {
         gameState->comboTimer -= delta;
         
-        // jezeli timer sie skonczyl, resetuj multiplier
+        // reset myltiplieru jak konczy sie czas na combo
         if (gameState->comboTimer <= 0) {
             gameState->currentMultiplier = 1.0f;
             gameState->comboTimer = 0;

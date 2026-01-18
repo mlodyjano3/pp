@@ -24,6 +24,8 @@
 #define LEFT -1
 #define RIGHT 1
 
+// czy range sa pokazane tylko w trybie deva czy w trybie zwyklym tez
+#define RANGES_DISPLAYED_DEV_ONLY 0
 
 // combo define'y
 #define MAX_COMBOS_TRACKED 100
@@ -51,8 +53,8 @@
 #define WALKER_WIDTH 50
 #define WALKER_HEIGHT 50
 #define WALKER_DAMAGE 20
-#define WALKER_ATTACK_RANGE 100
-#define WALKER_ATTACK_COUNTDOWN 1
+#define WALKER_ATTACK_RANGE 60
+#define WALKER_ATTACK_COUNTDOWN 1.5
 #define WALKER_SPEED 50
 #define WALKER_STUN 1
 #define WALKER_COOLDOWN 5
@@ -67,7 +69,7 @@
 #define CHARGER_STUN 1
 #define CHARGER_COOLDOWN 7
 #define CHARGER_DETECT_RANGE 300
-#define CHARGER_CHARGE_SPEED 250
+#define CHARGER_CHARGE_SPEED 200
 #define CHARGER_CHARGE_DURATION 1.5f
 //
 

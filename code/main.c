@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
 
 	if (LoadFiles(&screen, &charset, &eti, window, renderer, scrtex, &sprite) != 0) {
-        printf("Blad ladowania plikow! Upewnij sie, ze pliki .bmp sa w folderze z plikiem wykonywalnym (compiled/).\n");
+        printf("Blad ladowania plikow!\n");
         return 1; 
     }
 	SDL_SetColorKey(charset, SDL_TRUE, 0x000000);
@@ -96,12 +96,12 @@ int main(int argc, char **argv) {
 
 	scoringInitialize(&gameState);
     
-    // inicjalizacja wrogow - dodaj wasHitThisAttack
+    // inicjalizacja wrogow 
     for (int i = 0; i < enemiesData.enemies_count; i++) {
         enemiesData.enemies[i].wasHitThisAttack = 0;
     }
     
-    // MENU - uruchom przed gra
+	// menu dla gracza
     int startGame = menuRun(screen, charset, renderer, scrtex);
     if (!startGame) {
         // gracz wybralem wyjscie z menu
@@ -136,20 +136,55 @@ int main(int argc, char **argv) {
             camera.position.x = LEVEL_WIDTH - SCREEN_WIDTH;
         };
 
-		// rysowanie sceny
+		// podstawa + niebo
 		SDL_Rect skyRectangle = {0, 0, SCREEN_WIDTH, BACKGROUND_HEIGHT};
 		SDL_Rect groundRectangle = { 0,FLOOR_ZERO_Y, SCREEN_WIDTH, FLOOR_HEIGHT};
 		SDL_FillRect(screen, &skyRectangle, skyColor);
 		SDL_FillRect(screen, &groundRectangle, groundColor);
 
 		// rysowanie gracza
-		player.scale = 0.5f + (player.position.y / (float)SCREEN_HEIGHT); // skala w zaleznosci od polozenia y
+		player.scale = 0.5f + (player.position.y / (float) SCREEN_HEIGHT); // skala w zaleznosci od polozenia y
 		DrawEntityScaledAnimated(screen, player.tex, 
 			(int)player.position.x - camera.position.x + (player.measurements.w / 2),
 			(int)player.position.y - player.position.z,
 			player.scale,
 			&player
 		);
+
+
+        int shouldDrawRanges = 0;
+        if (RANGES_DISPLAYED_DEV_ONLY == 0) {
+            shouldDrawRanges = 1;
+        } else if (RANGES_DISPLAYED_DEV_ONLY == 1 && gameState.devMode) {
+            shouldDrawRanges = 1; // dev mode rysowanie
+        }
+        
+        if (shouldDrawRanges) {
+            int attackW = 0;
+            int attackH = 0;
+            
+            if (player.currentState == ENTITY_ATTACK_LIGHT) {
+                attackW = LIGHT_ATTACK_WIDTH;
+                attackH = LIGHT_ATTACK_HEIGHT;
+            } else if (player.currentState == ENTITY_ATTACK_HEAVY) {
+                attackW = HEAVY_ATTACK_WIDTH;
+                attackH = HEAVY_ATTACK_HEIGHT;
+            } else if (player.currentState == ENTITY_COMBO_TRIPLE_LIGHT) {
+                attackW = LIGHT_ATTACK_WIDTH + 20;
+                attackH = LIGHT_ATTACK_HEIGHT + 10;
+            } else if (player.currentState == ENTITY_COMBO_TRIPLE_HEAVY) {
+                attackW = HEAVY_ATTACK_WIDTH + 30;
+                attackH = HEAVY_ATTACK_HEIGHT + 20;
+            } else if (player.currentState == ENTITY_COMBO_MIXED) {
+                attackW = HEAVY_ATTACK_WIDTH + 10;
+                attackH = HEAVY_ATTACK_HEIGHT + 10;
+            }
+            
+            if (attackW > 0) {
+                int zolty = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
+                DrawAttackRange(screen, &player, camera, attackW, attackH, zolty);
+            }
+        }
 
 		// rysowanie wrogow
 		for (int i = 0; i < enemiesData.enemies_count; i++) {
@@ -161,9 +196,13 @@ int main(int argc, char **argv) {
 				if (enemy->type == ENTITY_ENEMY_WALKER) {
 				    fillColor = niebieski;
 				} else if (enemy->type == ENTITY_ENEMY_CHARGER) {
-				    // czerwony normalnie, żółty gdy szarżuje
-				    fillColor = enemy->chargerData.isCharging ? SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00) : czerwony;
-				}
+				    // czerwony normalnie, zolty jak szarzuje
+					if (enemy->chargerData.isCharging) {
+						fillColor = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
+					} else {
+						fillColor = czerwony;
+					};
+				};
 				
 				DrawRectangle(screen,
 					(int)enemy->position.x - camera.position.x,
@@ -174,7 +213,7 @@ int main(int argc, char **argv) {
 					fillColor
 				);
 				
-				// Pasek HP
+				//  pasek hp
 				int hpBarWidth = enemy->measurements.w;
 				int currentHpWidth = (int)(hpBarWidth * ((float)enemy->health.health / enemy->health.maxHealth));
 				
@@ -186,6 +225,37 @@ int main(int argc, char **argv) {
 					czarny,
 					zielony
 				);
+				
+				if (shouldDrawRanges) {
+				    int rangeColor = SDL_MapRGB(screen->format, 0xFF, 0x00, 0xFF);
+				    
+				    if (enemy->type == ENTITY_ENEMY_WALKER) {
+				        // zasieg ataku walker
+				        DrawCircleRange(screen,
+				            (int)enemy->position.x - camera.position.x + enemy->measurements.w/2,
+				            (int)enemy->position.y - enemy->measurements.h/2,
+				            WALKER_ATTACK_RANGE,
+				            rangeColor
+				        );
+				    } else if (enemy->type == ENTITY_ENEMY_CHARGER) {
+				        // zasieg wykrywania przez chargera
+				        int detectColor = SDL_MapRGB(screen->format, 0x00, 0xFF, 0xFF); // cyan
+				        DrawCircleRange(screen,
+				            (int)enemy->position.x - camera.position.x + enemy->measurements.w/2,
+				            (int)enemy->position.y - enemy->measurements.h/2,
+				            CHARGER_DETECT_RANGE,
+				            detectColor
+				        );
+				        
+				        // okrąg zasięgu eksplozji
+				        DrawCircleRange(screen,
+				            (int)enemy->position.x - camera.position.x + enemy->measurements.w/2,
+				            (int)enemy->position.y - enemy->measurements.h/2,
+				            CHARGER_ATTACK_RANGE,
+				            rangeColor
+				        );
+				    }
+				}
 			}
 		}
 
@@ -199,29 +269,29 @@ int main(int argc, char **argv) {
 			gameState.fpsTimer -= 0.5;
 		};
 
-		// interface 
+		// interfejs
 		DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 50, czerwony, niebieski);
         
-        // pasek HP gracza
+        //pasek hp gracza
         DrawHealthBar(screen, 10, 10, 200, 15, player.health.health, player.health.maxHealth);
         sprintf(text, "HP: %d/%d", player.health.health, player.health.maxHealth);
         DrawString(screen, 10, 28, text, charset);
         
         // punkty i multiplier
-        sprintf(text, "Punkty: %.0f", gameState.score);
+        sprintf(text, "Punkty %.0f", gameState.score);
         DrawString(screen, 220, 10, text, charset);
         
         sprintf(text, "Combo: x%.1f", gameState.currentMultiplier);
         DrawString(screen, 220, 20, text, charset);
         
         // czas
-        sprintf(text, "Czas: %.1lf s  %.0lf fps", gameState.worldTime, gameState.fps);
+        sprintf(text, "Czas: %.1lf s  | ilość FPS = %.0lf", gameState.worldTime, gameState.fps);
         DrawString(screen, 220, 30, text, charset);
         
         // tryb developerski
         if (gameState.devMode) {
             DrawDevMode(screen, charset, &player, &gameState);
-        }
+        };
 
 		SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch); // screen -> scrtex (ram -> gpu)
 		SDL_RenderCopy(renderer, scrtex, NULL, NULL); // rysuje teksture
@@ -248,6 +318,8 @@ int main(int argc, char **argv) {
                             
                             // reset gracza
                             playerInitialize(&player, 100, FLOOR_ZERO_Y + 10, sprite);
+                            player.invicibilityTimer = 0;
+                            player.isInvicible = 0;
                             
                             // reset wrogow
                             for (int i = 0; i < enemiesData.enemies_count; i++) {

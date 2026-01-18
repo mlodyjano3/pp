@@ -29,6 +29,9 @@ void DrawEntityScaledAnimated(SDL_Surface *screen, SDL_Surface *sprite, int x, i
 void DrawHealthBar(SDL_Surface* screen, int x, int y, int width, int height, 
                 	int currentHP, int maxHP);
 void DrawDevMode(SDL_Surface* screen, SDL_Surface* charset, Entity* player, GameState* gameState);
-
+void DrawAttackRange(SDL_Surface* screen, Entity* entity, Camera camera, 
+                     int attackWidth, int attackHeight, Uint32 color);
+void DrawCircleRange(SDL_Surface* screen, int centerX, int centerY, 
+                     int radius, Uint32 color);
 
 #endif

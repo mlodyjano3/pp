@@ -151,7 +151,10 @@ void enemyUpdatePosition(Entity* enemy, Entity* player, double delta) {
 
     switch (enemy->type) {
         case ENTITY_ENEMY_WALKER: {
-            if (distanceToPlayer > WALKER_ATTACK_RANGE) {
+            // Walker podchodzi do gracza ale zostaje 20px przed zasięgiem ataku
+            float stopDistance = WALKER_ATTACK_RANGE - 20;
+            
+            if (distanceToPlayer > stopDistance) {
                 float dirX = dx / distanceToPlayer;
                 float dirY = dy / distanceToPlayer;
                 
@@ -159,70 +162,107 @@ void enemyUpdatePosition(Entity* enemy, Entity* player, double delta) {
                 enemy->position.y += dirY * enemy->speed * delta;
                 
                 enemy->currentState = ENTITY_WALKING;
+                
+                // ustaw kierunek patrzenia
                 if (dx < 0) {
                     enemy->facingLeft = 1;
                 } else {
                     enemy->facingLeft = 0;
                 }
             } else {
+                // stoi w miejscu i czeka na atak
                 enemy->currentState = ENITY_IDLE;
             }
             break;
         }
         
         case ENTITY_ENEMY_CHARGER: {
-            // NOWE AI DLA CHARGERA
+            // POPRAWIONE AI CHARGERA
             
-            // jezeli gracz w zasiegu i charger nie szarżuje
+            // jezeli gracz jest w zasiegu wykrywania
             if (distanceToPlayer < CHARGER_DETECT_RANGE && !enemy->chargerData.isCharging) {
-                // sprawdz czy gracz jest mniej wiecej w linii (tolerancja Y)
-                float yDiff = fabs(dy);
-                if (yDiff < 80) {
-                    // ROZPOCZNIJ SZARŻĘ!
-                    enemy->chargerData.isCharging = 1;
-                    enemy->chargerData.chargeTimer = CHARGER_CHARGE_DURATION;
-                    enemy->currentState = ENTITY_CHARGING;
-                    
-                    // ustaw kierunek
-                    if (dx < 0) {
-                        enemy->facingLeft = 1;
-                    } else {
-                        enemy->facingLeft = 0;
-                    }
-                    
-                    printf("CHARGER STARTS CHARGING!\n");
+                // UPROSZCZONE - nie sprawdzamy Y, charger zawsze szarżuje
+                // ustaw kierunek przed szarżą
+                if (dx < 0) {
+                    enemy->facingLeft = 1;
+                } else {
+                    enemy->facingLeft = 0;
                 }
+                
+                // ROZPOCZNIJ SZARŻĘ
+                enemy->chargerData.isCharging = 1;
+                enemy->chargerData.chargeTimer = CHARGER_CHARGE_DURATION;
+                enemy->currentState = ENTITY_CHARGING;
+                
+                printf("CHARGER STARTS CHARGING! Distance: %.0f\n", distanceToPlayer);
             }
             
             // jezeli szarżuje
             if (enemy->chargerData.isCharging) {
                 enemy->chargerData.chargeTimer -= delta;
                 
+                // szarżuj w kierunku w którym patrzysz (nie podążaj za graczem!)
                 int chargeDir = enemy->facingLeft ? -1 : 1;
                 enemy->position.x += chargeDir * CHARGER_CHARGE_SPEED * delta;
                 
+                // koniec szarży gdy timer się skończy
                 if (enemy->chargerData.chargeTimer <= 0) {
                     enemy->chargerData.isCharging = 0;
                     enemy->currentState = ENITY_IDLE;
-                    printf("Charger stopped charging\n");
+                    // cooldown przed następną szarżą - ponownie użyj attackCooldown
+                    enemy->attackDamage.attackCooldown = 3.0f; // 3 sekundy przerwy
+                    printf("Charger stopped charging - cooldown 3s\n");
                 }
             } else {
-                if (distanceToPlayer > CHARGER_DETECT_RANGE) {
-                    float dirX = dx / distanceToPlayer;
-                    float dirY = dy / distanceToPlayer;
-                    
-                    enemy->position.x += dirX * (enemy->speed * 0.5f) * delta;
-                    enemy->position.y += dirY * (enemy->speed * 0.5f) * delta;
-                    
-                    enemy->currentState = ENTITY_WALKING;
-                } else {
+                // nie szarżuje
+                
+                // cooldown po szarży
+                if (enemy->attackDamage.attackCooldown > 0) {
+                    enemy->attackDamage.attackCooldown -= delta;
                     enemy->currentState = ENITY_IDLE;
+                } else {
+                    // podchodź powoli do gracza (szukanie pozycji do szarży)
+                    if (distanceToPlayer > CHARGER_DETECT_RANGE + 50) {
+                        float dirX = dx / distanceToPlayer;
+                        float dirY = dy / distanceToPlayer;
+                        
+                        // wolniejszy ruch niż walker
+                        enemy->position.x += dirX * (enemy->speed * 0.4f) * delta;
+                        enemy->position.y += dirY * (enemy->speed * 0.4f) * delta;
+                        
+                        enemy->currentState = ENTITY_WALKING;
+                        
+                        if (dx < 0) {
+                            enemy->facingLeft = 1;
+                        } else {
+                            enemy->facingLeft = 0;
+                        }
+                    } else {
+                        // w zasięgu - czekaj na szarżę
+                        enemy->currentState = ENITY_IDLE;
+                    }
                 }
             }
             break;
         }
         
         default: break;
+    }
+    
+    // ograniczenia pozycji wroga (żeby nie wyszedł poza mapę)
+    if (enemy->position.x < 0) {
+        enemy->position.x = 0;
+    }
+    if (enemy->position.x > LEVEL_WIDTH - enemy->measurements.w) {
+        enemy->position.x = LEVEL_WIDTH - enemy->measurements.w;
+    }
+    
+    float currentHeight = enemy->measurements.h * enemy->scale;
+    if (enemy->position.y + currentHeight < FLOOR_ZERO_Y) {
+        enemy->position.y = FLOOR_ZERO_Y - currentHeight;
+    }
+    if (enemy->position.y + currentHeight > SCREEN_HEIGHT) {
+        enemy->position.y = SCREEN_HEIGHT - currentHeight;
     }
     
     // update hitboxa

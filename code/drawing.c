@@ -63,7 +63,7 @@ void DrawEntityScaledAnimated(SDL_Surface *screen, SDL_Surface *sprite, int x, i
 	if (player->currentState == ENITY_IDLE) row = 2; 
     else if (player->currentState == ENTITY_WALKING) row = 11; //
     else if (player->currentState == ENTITY_ATTACK_LIGHT) row = 15;
-    else if (player->currentState == ENTITY_ATTACK_HEAVY) row = 14;// 65 to ostatni index aatkow w plik
+    else if (player->currentState == ENTITY_ATTACK_HEAVY) row = 14;// 65 to ostatni index aatkow w pliku
 
 	//animacje dla combo
 	else if (player->currentState == ENTITY_COMBO_TRIPLE_LIGHT) row = 16;
@@ -144,12 +144,12 @@ void DrawHealthBar(SDL_Surface* screen, int x, int y, int width, int height,
     int zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
     int zolty = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
     
-    // oblicz procent HP
+    // obliczanie ile hp ma
     float hpPercent = (float)currentHP / (float)maxHP;
     if (hpPercent < 0) hpPercent = 0;
     if (hpPercent > 1) hpPercent = 1;
     
-    // wybierz kolor w zaleznosci od HP
+    // hp kolor
     int fillColor = zielony;
     if (hpPercent < 0.25f) {
         fillColor = czerwony;
@@ -157,10 +157,10 @@ void DrawHealthBar(SDL_Surface* screen, int x, int y, int width, int height,
         fillColor = zolty;
     }
     
-    // rysuj tlo (puste HP)
+    // tlo
     DrawRectangle(screen, x, y, width, height, czarny, czerwony);
     
-    // rysuj wypelnienie (obecne HP)
+    // wypelnienie
     int currentWidth = (int)(width * hpPercent);
     if (currentWidth > 0) {
         DrawRectangle(screen, x, y, currentWidth, height, czarny, fillColor);
@@ -172,78 +172,137 @@ void DrawDevMode(SDL_Surface* screen, SDL_Surface* charset, Entity* player, Game
     int czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
     
     char text[256];
-    int y = 50;
     
     // tlo dla dev info
     DrawRectangle(screen, 10, 45, 300, 150, zielony, czarny);
     
-    DrawString(screen, 15, y, "=== DEV MODE ===", charset);
-    y += 15;
-    
+    DrawString(screen, 15, 50, "=== DEV MODE ===", charset);
     // stan gracza
     sprintf(text, "Stan: %d", player->currentState);
-    DrawString(screen, 15, y, text, charset);
-    y += 10;
+    DrawString(screen, 15, 65, text, charset);
     
     // aktywne combo
     sprintf(text, "Combo: %s", GetComboName(player->activeCombo));
-    DrawString(screen, 15, y, text, charset);
-    y += 10;
+    DrawString(screen, 15, 75, text, charset);
     
     // bufor inputow
     sprintf(text, "Bufor (%d):", player->inputBuffer.count);
-    DrawString(screen, 15, y, text, charset);
-    y += 10;
+    DrawString(screen, 15, 85, text, charset);
     
     for (int i = 0; i < player->inputBuffer.count && i < 5; i++) {
         char* inputName = "?";
         switch (player->inputBuffer.buffer[i].type) {
-            case INPUT_ATTACK_LIGHT: inputName = "Q"; break;
-            case INPUT_ATTACK_HEAVY: inputName = "E"; break;
-            case INPUT_MOVE_LEFT: inputName = "<"; break;
-            case INPUT_MOVE_RIGHT: inputName = ">"; break;
-            case INPUT_MOVE_UP: inputName = "^"; break;
-            case INPUT_MOVE_DOWN: inputName = "v"; break;
-            default: inputName = "?"; break;
+            case INPUT_ATTACK_LIGHT: {
+                inputName = "Q"; break;
+            };
+            case INPUT_ATTACK_HEAVY: {
+                inputName = "E";
+                 break;
+            }
+            case INPUT_MOVE_LEFT:{
+                inputName = "<"; 
+                break;
+            };
+            case INPUT_MOVE_RIGHT: {
+                inputName = ">"; 
+                break;
+            };
+            case INPUT_MOVE_UP: {
+                inputName = "^"; 
+                break;
+            };
+            case INPUT_MOVE_DOWN: {
+                inputName = "v"; 
+                break;
+            };
+            default:{
+                inputName = "?"; break;
+            };
         }
         sprintf(text, " [%d] %s (%.2fs)", i, inputName, 
                 player->inputBuffer.buffer[i].timestamp);
-        DrawString(screen, 15, y, text, charset);
-        y += 10;
+        DrawString(screen, 15, 95, text, charset);
     }
     
     // multiplier i punkty
-    y += 5;
     sprintf(text, "Punkty: %.0f", gameState->score);
-    DrawString(screen, 15, y, text, charset);
-    y += 10;
-    
+    DrawString(screen, 15, 105, text, charset);
     sprintf(text, "Multiplier: x%.1f", gameState->currentMultiplier);
-    DrawString(screen, 15, y, text, charset);
-    y += 10;
-    
+    DrawString(screen, 15, 115, text, charset);
     sprintf(text, "Combo timer: %.1fs", gameState->comboTimer);
-    DrawString(screen, 15, y, text, charset);
+    DrawString(screen, 15, 130, text, charset);
 }
 
 
-/*
-void drawAllEnemies(EnemiesData* enemiesData) {
-	for (int i =0; i < enemiesData->enemies_count; i++) {
-		Entity* currentEnemy = &enemiesData->enemies[i];
-		if (currentEnemy->health.health > 0) {
-			int color = (currentEnemy->type == ENTITY_ENEMY_WALKER) ? niebieski : czerwony;
+void DrawAttackRange(SDL_Surface* screen, Entity* entity, Camera camera, 
+                    int attackWidth, int attackHeight, Uint32 color) {
+    // zasieg ataku
+    int range_x = entity->position.x;
+    int range_y = entity->position.y;
+    
+    // offset (zalezy od kierunkuy patrzenia)
+    if (entity->facingLeft) {
+        range_x -= attackWidth;
+    } else {
+        range_x += entity->measurements.w;
+    };
+    
+    // górna linia
+    DrawLine(screen,range_x - camera.position.x, 
+            range_y - attackHeight - camera.position.y,
+            attackWidth, 1, 0, color);
+    
+    // dolna linia
+    DrawLine(screen, range_x - camera.position.x, 
+            range_y - camera.position.y,
+            attackWidth, 1, 0, color);
+    
+    // lewa linia
+    DrawLine(screen, 
+            range_x - camera.position.x, 
+            range_y - attackHeight - camera.position.y,
+            attackHeight, 0, 1, color);
+    
+    // prawa linia
+    DrawLine(screen, range_x + attackWidth - camera.position.x, 
+            range_y - attackHeight - camera.position.y,
+            attackHeight, 0, 1, color);
+}
+
+void DrawCircleRange(SDL_Surface* screen, int centerX, int centerY, 
+                     int radius, Uint32 color) {
+    int circlepoints = 32;
+    
+    for (int i = 0; i < circlepoints; i++) {
+        float angle1 = (i * 2 * M_PI) / circlepoints;
+        float angle2 = ((i + 1) *2 * M_PI) / circlepoints;
         
-			DrawRectangle(screen,
-				(int)currentEnemy->position.x - camera.position.x,
-				(int)currentEnemy->position.y - enemy->measurements.h,
-				enemy->measurements.w,
-				enemy->measurements.h,
-				czarny,   // outline
-				color     // fill
-			);
-
-		}
-	};
-}
-*/
+        int x1 = centerX + (int)(cos(angle1) * radius);
+        int y1 = centerY + (int)(sin(angle1) * radius);
+        int x2 = centerX + (int)(cos(angle2) * radius);
+        int y2 = centerY + (int)(sin(angle2) * radius);
+        
+        // linie miedzy punktami
+        int dx = x2 - x1;
+        int dy = y2 - y1;
+        int absdx = abs(dx);
+        int absdy = abs(dy);
+        int steps;
+        if (absdx > absdy) {
+            steps = absdx;
+        } else { steps = absdy; };
+        
+        if (steps > 0) {
+            float xInc = dx / (float)steps;
+            float yInc = dy / (float)steps;
+            float x = x1;
+            float y = y1;
+            
+            for (int j = 0; j <= steps; j++) {
+                DrawPixel(screen, (int)x, (int)y, color);
+                x += xInc;
+                y += yInc;
+            }
+        }
+    }
+};

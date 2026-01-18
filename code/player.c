@@ -144,7 +144,7 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
     }
 
     // sprawdzanie combo
-    ComboType detectedCombo = CheckCombo(&player->inputBuffer, currentTime);
+    ComboType detectedCombo = checkCombo(&player->inputBuffer, currentTime);
     if (detectedCombo != COMBO_NONE && !isAttacking) {
         PerformCombo(player, detectedCombo, currentTime);
         isAttacking = 1;
