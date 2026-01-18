@@ -1,6 +1,8 @@
 #include "../headers/structures.h"
 #include "../headers/consts.h"
 #include "../headers/points.h"
+#include "../headers/player.h"
+#include "../headers/enemies.h"
 
 #include <stdio.h>
 

@@ -36,7 +36,6 @@ void initVariables(GameState* gameState, Camera* camera) {
 	gameState->etiSpeed = 1;
 	gameState->quit = 0;
 
-    Camera camera;
 	camera->position.x = 0;
 	camera->position.y = 0;
 	camera->w = SCREEN_WIDTH;
@@ -44,11 +43,11 @@ void initVariables(GameState* gameState, Camera* camera) {
 };
 
 void initColors(int* czarny, int* zielony, int* czerwony, int* niebieski, int* groundColor, int* skyColor, SDL_Surface* screen) {
-    czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
-	zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
-	czerwony = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
-	niebieski = SDL_MapRGB(screen->format, 0x11, 0x11, 0xCC);
+    *czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
+	*zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
+	*czerwony = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
+	*niebieski = SDL_MapRGB(screen->format, 0x11, 0x11, 0xCC);
 
-	groundColor = SDL_MapRGB(screen->format, 0x22, 0x88, 0x22);
-	skyColor = SDL_MapRGB(screen->format, 0x88, 0xCC, 0xFF);
+	*groundColor = SDL_MapRGB(screen->format, 0x22, 0x88, 0x22);
+	*skyColor = SDL_MapRGB(screen->format, 0x88, 0xCC, 0xFF);
 };

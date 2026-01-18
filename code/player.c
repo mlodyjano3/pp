@@ -64,7 +64,7 @@ void playerInitialize(Entity* player, float x, float y, SDL_Surface* tex) {
 };
 
 
-void playerhandleJump(Entity *player, Uint8* state, double delta) {
+void playerhandleJump(Entity *player, const Uint8* state, double delta) {
     if (state[SDL_SCANCODE_SPACE] && player->position.z == 0) {
         player->currentState = ENTITY_JUMPING;
         player->vz = 300.0f;
@@ -83,7 +83,7 @@ void playerhandleJump(Entity *player, Uint8* state, double delta) {
     }
 };
 
-void playerHandleMove(Entity *player, Uint8* state, double delta) {
+void playerHandleMove(Entity *player, const Uint8* state, double delta) {
     if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A]) {
         player->direction.x = -1;
         player->facingLeft = 1;
@@ -122,7 +122,7 @@ void playerRespectBoundaries(Entity* player, float currentHeight) {
     }
 };
 
-void playerHandleBasicAttacks(Entity *player ,Uint8* state) {
+void playerHandleBasicAttacks(Entity *player ,const Uint8* state) {
         if (state[SDL_SCANCODE_Q]) {
             player->currentState = ENTITY_ATTACK_LIGHT;
             player->timer = 0.3f;
@@ -193,7 +193,7 @@ int playerIsAttacking(Entity* player) {
             player->currentState == ENTITY_DASHING);
 };
 
-void playerDetectKeys(Uint8* state, Entity* player, Uint8* prevStateBuffer, float currentTime) {
+void playerDetectKeys(const Uint8* state, Entity* player, const Uint8* prevStateBuffer, float currentTime) {
     int qPressed = state[SDL_SCANCODE_Q] && !prevStateBuffer[SDL_SCANCODE_Q];
     int ePressed = state[SDL_SCANCODE_E] && !prevStateBuffer[SDL_SCANCODE_E];
     int leftPressed = (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A]) && 
@@ -221,13 +221,13 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
     const Uint8* state = SDL_GetKeyboardState(NULL);
     static Uint8 prevStateBuffer[SDL_NUM_SCANCODES] = {0};
 
-    playerUpdateTimers(&player, delta);
+    playerUpdateTimers(player, delta);
 
-    int isAttacking = playerIsAttacking(&player);
+    int isAttacking = playerIsAttacking(player);
 
     // dodawanie inputow do bufora
     float currentTime = (float)SDL_GetTicks() / 1000;
-    playerDetectKeys(state, &player, prevStateBuffer, currentTime);
+    playerDetectKeys(state, player, prevStateBuffer, currentTime);
 
     // sprawdzanie combo
     ComboType detectedCombo = checkCombo(&player->inputBuffer, currentTime);
@@ -242,15 +242,15 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
  
     // obsluga ruchu (tylko gdy nie atakujemy)
     if (!isAttacking) {
-        playerHandleMove(&player, state, delta);
+        playerHandleMove(player, state, delta);
     }
 
     // skoki
-    playerhandleJump(&player, state, delta);
+    playerhandleJump(player, state, delta);
 
     // ataki podstawowe (tylko gdy nie ma combo)
     if (!isAttacking && player->position.z == 0) {
-        playerHandleBasicAttacks(&player, state);
+        playerHandleBasicAttacks(player, state);
     };
 
     // ruch gracza
@@ -269,7 +269,7 @@ void playerUpdate(Entity* player, double delta, EnemiesData* enemiesData, GameSt
     float currentHeight = player->measurements.h * player->scale;
 
     // ograniczenia ruchu
-    playerRespectBoundaries(&player, currentHeight);
+    playerRespectBoundaries(player, currentHeight);
 
     // 
     isPlayerAlive(player, gameState);

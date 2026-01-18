@@ -1,5 +1,11 @@
 #include <SDL.h>
 #include "../headers/structures.h"
+#include "../headers/player.h"
+#include "../headers/enemies.h"
+#include "../headers/points.h"
+#include "../headers/consts.h"
+
+
 
 void handleKey(SDL_Event event, GameState* gameState, int* frames, Entity* player, SDL_Surface* sprite, EnemiesData* enemiesData) {
     switch (event.type) {

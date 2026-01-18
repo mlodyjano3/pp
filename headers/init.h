@@ -5,6 +5,6 @@
 
 int configureSDL(SDL_Window** window, SDL_Renderer** renderer);
 void initVariables(GameState* gameState, Camera* camera);
-void initColors(int* czarny, int* zielony, int* czerwony, int* niebieski, int* groundColor, int* skyColor, SDL_Surface* screen)
+void initColors(int* czarny, int* zielony, int* czerwony, int* niebieski, int* groundColor, int* skyColor, SDL_Surface* screen);
 
 #endif

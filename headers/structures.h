@@ -3,7 +3,7 @@
 
 #include <SDL.h>
 #include <SDL_main.h>
-#include <consts.h>
+#include "consts.h"
 
 #define INPUT_BUFFER_SIZE 10
 #define COMBO_TIMEOUT 0.5f  // czas w sek na perform combo

@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
 
 	int czarny, zielony, czerwony, niebieski, groundColor, skyColor;
-	initColors(&czarny, &zielony, &czerwony, &niebieski, &groundColor, &skyColor, &appResources.screen);
+	initColors(&czarny, &zielony, &czerwony, &niebieski, &groundColor, &skyColor, appResources.screen);
 
 
 	if (LoadFiles(&appResources.screen, &charset, &eti, appResources.window, appResources.renderer, appResources.scrtex, &appResources.sprite) != 0) {
@@ -104,12 +104,12 @@ int main(int argc, char **argv) {
 		updateAll(&player, &enemiesData, &gameState, &camera, delta);
 
 		drawAll(
-			&appResources.screen, &charset, skyRectangle, groundRectangle, 
+			appResources.screen, charset, skyRectangle, groundRectangle, 
 			&player, &camera, &enemiesData, &gameState, 
 			skyColor, groundColor, niebieski, czerwony, zielony, czarny
 		);
 
-		displayFrame(&appResources.renderer, &appResources.scrtex, &appResources.screen);
+		displayFrame(appResources.renderer, appResources.scrtex, appResources.screen);
 		
 		// aktualizacja fpsow
 		updateFPS(&gameState, &frames, delta);
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
 		// obsluga przyciskow
 		while (SDL_PollEvent(&event)) {
             handleKey(
-				event, &gameState, &frames, &player, &appResources.sprite, &enemiesData
+				event, &gameState, &frames, &player, appResources.sprite, &enemiesData
 			);
 		};
 		frames++;

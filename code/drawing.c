@@ -5,8 +5,8 @@
 
 #include <SDL.h>
 #include <SDL_main.h>
-#include <../headers/structures.h>
-#include <../headers/combos.h>
+#include "../headers/structures.h"
+#include "../headers/combos.h"
 
 void DrawString(SDL_Surface *screen, int x, int y, const char *text, SDL_Surface *charset) {
 	int px, py, c;
@@ -308,11 +308,11 @@ void DrawCircleRange(SDL_Surface* screen, int centerX, int centerY,
 };
 
 void shouldDrawRanges(int* shouldDrawRanges, GameState gameState) {
-    int shouldDrawRanges = 0;
+    *shouldDrawRanges = 0;
     if (RANGES_DISPLAYED_DEV_ONLY == 0) {
-        shouldDrawRanges = 1;
+        *shouldDrawRanges = 1;
     } else if (RANGES_DISPLAYED_DEV_ONLY == 1 && gameState.devMode) {
-        shouldDrawRanges = 1; // dev mode rysowanie
+        *shouldDrawRanges = 1; // dev mode rysowanie
     };
 };
 
