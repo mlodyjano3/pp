@@ -136,7 +136,6 @@ void enemyAttack(Entity* enemy, Entity* player, double delta, GameState* gameSta
     }
     
     if (enemy->type == ENTITY_ENEMY_WALKER && distanceToPlayer < WALKER_ATTACK_RANGE) {
-        // Walker atakuje co WALKER_ATTACK_COUNTDOWN sekund
         if (enemy->attackDamage.attackCooldown <= 0) {
             player->health.health -= enemy->attackDamage.damage;
             if (player->health.health < 0) {
@@ -145,10 +144,8 @@ void enemyAttack(Entity* enemy, Entity* player, double delta, GameState* gameSta
             enemy->attackDamage.attackCooldown = WALKER_ATTACK_COUNTDOWN;
             enemy->isCurrentlyAttacking = 1;
             
-            // RESETUJ COMBO GRACZA
             scoringOnPlayerHit(gameState);
             
-            // włącz animację trafienia gracza
             player->currentState = ENTITY_HIT;
             player->timer = PLAYER_HIT_DURATION;
             player->isInvicible = 1;
@@ -158,7 +155,7 @@ void enemyAttack(Entity* enemy, Entity* player, double delta, GameState* gameSta
         }
     }
     
-    // zmniejszaj cooldown
+    // zmniejsza cooldown
     if (enemy->attackDamage.attackCooldown > 0) {
         enemy->attackDamage.attackCooldown -= delta;
         if (enemy->attackDamage.attackCooldown <= 0) {
@@ -284,6 +281,9 @@ void enemyUpdatePosition(Entity* enemy, Entity* player, double delta) {
     
     // ograniczenia pozycji wroga
     enemyBoundaries(enemy);
+
+    float currentHeight = enemy->measurements.h * enemy->scale;
+    float currentWidth = enemy->measurements.w * enemy->scale;
     
     // update hitboxa
     enemy->hitboxes.x = enemy->position.x;

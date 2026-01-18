@@ -22,21 +22,21 @@ int checkCollision(Hitbox player, Hitbox enemy) {
 }
 
 void updatePlayerHitboxes(Entity* player) {
-    // hitbox ciala gracza
-    player->hitboxes.x = player->position.x;
-    player->hitboxes.y = player->position.y - player->measurements.h;
-    player->hitboxes.w = player->measurements.w;
-    player->hitboxes.h = player->measurements.h;
+    float currentHeight = player->measurements.h * player->scale;
+    float currentWidth = player->measurements.w * player->scale;
     
-    // hitbox ataku - zalezny od kierunku patrzenia
+    player->hitboxes.x = player->position.x;
+    player->hitboxes.y = player->position.y - currentHeight - player->position.z;
+    player->hitboxes.w = currentWidth;
+    player->hitboxes.h = currentHeight;
+    
     int attackOffsetX = 0;
     if (player->facingLeft) {
-        attackOffsetX = -60; // atak w lewo
+        attackOffsetX = -60;
     } else {
-        attackOffsetX = player->measurements.w; // atak w prawo
+        attackOffsetX = currentWidth;
     }
     
-    // rozmiar hitboxa ataku zalezy od typu ataku
     int attackWidth = 0;
     int attackHeight = 0;
     
@@ -47,7 +47,7 @@ void updatePlayerHitboxes(Entity* player) {
         attackWidth = HEAVY_ATTACK_WIDTH;
         attackHeight = HEAVY_ATTACK_HEIGHT;
     } else if (player->currentState == ENTITY_COMBO_TRIPLE_LIGHT) {
-        attackWidth = LIGHT_ATTACK_WIDTH + 20; // combo troche wieksze
+        attackWidth = LIGHT_ATTACK_WIDTH + 20;
         attackHeight = LIGHT_ATTACK_HEIGHT + 10;
     } else if (player->currentState == ENTITY_COMBO_TRIPLE_HEAVY) {
         attackWidth = HEAVY_ATTACK_WIDTH + 30;
@@ -58,10 +58,12 @@ void updatePlayerHitboxes(Entity* player) {
     }
     
     player->attacking_hitboxes.x = player->position.x + attackOffsetX;
-    player->attacking_hitboxes.y = player->position.y - attackHeight;
+    player->attacking_hitboxes.y = player->position.y - attackHeight - player->position.z;
     player->attacking_hitboxes.w = attackWidth;
     player->attacking_hitboxes.h = attackHeight;
-}
+};
+
+
 
 void checkPlayerAttackCollisions(Entity* player, EnemiesData* enemiesData, GameState* gameState) {
     int isAttacking = (IS_PLAYER_ATTACKING_SHORTCUT);

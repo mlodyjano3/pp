@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	);
 
 	// napraw
-	enemiesData.enemies_count = 5;
+	enemiesData.enemies_count = MAX_ENEMIES;
 
 	for (int i = 0; i < enemiesData.enemies_count; i++) {
 		EntityType type = (i % 2 == 0) ? ENTITY_ENEMY_WALKER : ENTITY_ENEMY_CHARGER;

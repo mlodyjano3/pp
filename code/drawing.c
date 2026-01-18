@@ -235,39 +235,22 @@ void DrawDevMode(SDL_Surface* screen, SDL_Surface* charset, Entity* player, Game
 
 
 void DrawAttackRange(SDL_Surface* screen, Entity* entity, Camera camera, 
-                    int attackWidth, int attackHeight, Uint32 color) {
-    // zasieg ataku
-    int range_x = entity->position.x;
-    int range_y = entity->position.y;
+                     int attackWidth, int attackHeight, Uint32 color) {
+    int range_x = entity->attacking_hitboxes.x;
+    int range_y = entity->attacking_hitboxes.y;
     
-    // offset (zalezy od kierunkuy patrzenia)
-    if (entity->facingLeft) {
-        range_x -= attackWidth;
-    } else {
-        range_x += entity->measurements.w;
-    };
+    int screen_x = range_x - camera.position.x;
+    int screen_y = range_y - camera.position.y;
     
-    // górna linia
-    DrawLine(screen,range_x - camera.position.x, 
-            range_y - attackHeight - camera.position.y,
-            attackWidth, 1, 0, color);
+    for (int i = 0; i < 4; i++) {
+        DrawLine(screen, screen_x, screen_y + attackHeight - i, attackWidth, 1, 0, color);
+    }
     
-    // dolna linia
-    DrawLine(screen, range_x - camera.position.x, 
-            range_y - camera.position.y,
-            attackWidth, 1, 0, color);
-    
-    // lewa linia
-    DrawLine(screen, 
-            range_x - camera.position.x, 
-            range_y - attackHeight - camera.position.y,
-            attackHeight, 0, 1, color);
-    
-    // prawa linia
-    DrawLine(screen, range_x + attackWidth - camera.position.x, 
-            range_y - attackHeight - camera.position.y,
-            attackHeight, 0, 1, color);
-}
+    for (int i = 0; i < 8; i++) {
+        DrawPixel(screen, screen_x, screen_y + attackHeight - 4 - i, color);
+        DrawPixel(screen, screen_x + attackWidth, screen_y + attackHeight - 4 - i, color);
+    }
+};
 
 void DrawCircleRange(SDL_Surface* screen, int centerX, int centerY, 
                      int radius, Uint32 color) {
@@ -363,16 +346,19 @@ void drawEnemies(
                 };
             };
             
+            float currentHeight = enemy->measurements.h * enemy->scale;
+            float currentWidth = enemy->measurements.w * enemy->scale;
+            
             DrawRectangle(screen,
                 (int)enemy->position.x - camera->position.x,
-                (int)enemy->position.y - enemy->measurements.h,
-                enemy->measurements.w,
-                enemy->measurements.h,
+                (int)(enemy->position.y - currentHeight),
+                (int)currentWidth,
+                (int)currentHeight,
                 czarny,
                 fillColor
             );
             
-            int hpBarWidth = enemy->measurements.w;
+            int hpBarWidth = (int)currentWidth;
             int currentHpWidth = (int)(hpBarWidth * ((float)enemy->health.health / enemy->health.maxHealth));
             if (currentHpWidth < 0) {
                 currentHpWidth = 0;
@@ -384,7 +370,7 @@ void drawEnemies(
             
             DrawRectangle(screen,
                 (int)enemy->position.x - camera->position.x,
-                (int)enemy->position.y - enemy->measurements.h - 8,
+                (int)(enemy->position.y - currentHeight - 8),
                 currentHpWidth,
                 4,
                 czarny,
@@ -396,23 +382,23 @@ void drawEnemies(
                 
                 if (enemy->type == ENTITY_ENEMY_WALKER) {
                     DrawCircleRange(screen,
-                        (int)enemy->position.x - camera->position.x + enemy->measurements.w/2,
-                        (int)enemy->position.y - enemy->measurements.h/2,
+                        (int)enemy->position.x - camera->position.x + (int)currentWidth/2,
+                        (int)(enemy->position.y - currentHeight/2),
                         WALKER_ATTACK_RANGE,
                         rangeColor
                     );
                 } else if (enemy->type == ENTITY_ENEMY_CHARGER) {
                     int detectColor = SDL_MapRGB(screen->format, 0x00, 0xFF, 0xFF);
                     DrawCircleRange(screen,
-                        (int)enemy->position.x - camera->position.x + enemy->measurements.w/2,
-                        (int)enemy->position.y - enemy->measurements.h/2,
+                        (int)enemy->position.x - camera->position.x + (int)currentWidth/2,
+                        (int)(enemy->position.y - currentHeight/2),
                         CHARGER_DETECT_RANGE,
                         detectColor
                     );
                     
                     DrawCircleRange(screen,
-                        (int)enemy->position.x - camera->position.x + enemy->measurements.w/2,
-                        (int)enemy->position.y - enemy->measurements.h/2,
+                        (int)enemy->position.x - camera->position.x + (int)currentWidth/2,
+                        (int)(enemy->position.y - currentHeight/2),
                         CHARGER_ATTACK_RANGE,
                         rangeColor
                     );
@@ -421,6 +407,8 @@ void drawEnemies(
         }
     }
 };
+
+
 
 void drawWorld(SDL_Surface* screen, Entity* player, Camera* camera, EnemiesData* enemiesData, GameState* gameState, SDL_Rect skyRectangle, SDL_Rect groundRectangle, int skyColor, int groundColor, int niebieski, int czerwony, int zielony, int czarny) {
     // podstawa + niebo

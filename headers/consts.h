@@ -26,7 +26,7 @@
 #define RIGHT 1
 
 // czy range sa pokazane tylko w trybie deva czy w trybie zwyklym tez
-#define RANGES_DISPLAYED_DEV_ONLY 0
+#define RANGES_DISPLAYED_DEV_ONLY 1
 
 // combo define'y
 #define MAX_COMBOS_TRACKED 100
@@ -48,7 +48,7 @@
 
 
 // stale dla wrogow
-#define MAX_ENEMIES 40
+#define MAX_ENEMIES 10
 
 #define WALKER_MAX_HP 10
 #define WALKER_WIDTH 50
