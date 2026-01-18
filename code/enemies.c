@@ -28,11 +28,9 @@ void enemyBoundaries(Entity *enemy) {
 void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex, 
     Entity* player, EntityType enemyType) {
 
-    // odpowiednie pozycje dla enemies
     int min_pos = player->position.x + 100;
     int max_pos = LEVEL_WIDTH - 100;
     
-    // randomizacja
     enemy->position.x = (rand() % (max_pos - min_pos + 1)) + min_pos;
     enemy->position.y = FLOOR_ZERO_Y + (rand() % 300);
     enemy->position.z = 0;
@@ -56,12 +54,11 @@ void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex,
             AttackValues attackVal = {
                 CHARGER_DAMAGE,
                 CHARGER_STUN,
-                CHARGER_COOLDOWN
+                0  // attackCooldown zaczyna się od 0!
             };
             enemy->attackDamage = attackVal;
             enemy->speed = CHARGER_SPEED;
             
-            // inicjalizacja dla chargera
             enemy->chargerData.isCharging = 0;
             enemy->chargerData.chargeTimer = 0;
             break;
@@ -76,7 +73,7 @@ void enemyInitialize(Entity *enemy, SDL_Surface *enemy_tex,
             AttackValues attackVal = {
                 WALKER_DAMAGE,
                 WALKER_STUN,
-                WALKER_COOLDOWN
+                0  // attackCooldown zaczyna się od 0!
             };
             enemy->attackDamage = attackVal;
             enemy->speed = WALKER_SPEED;

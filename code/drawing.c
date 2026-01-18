@@ -440,23 +440,26 @@ void drawInterface(
     int czerwony, int niebieski, int zielony, int czarny) {
     char text[128];
     // interfejs
-	DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 50, czerwony, niebieski);
-        
+    DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 60, czerwony, niebieski);
+    
     //pasek hp gracza
     DrawHealthBar(screen, 10, 10, 200, 15, player.health.health, player.health.maxHealth);
     sprintf(text, "HP: %d/%d", player.health.health, player.health.maxHealth);
     DrawString(screen, 10, 28, text, charset);
-        
+    
     // punkty i multiplier
     sprintf(text, "Punkty %.0f", gameState->score);
     DrawString(screen, 220, 10, text, charset);
-        
+    
     sprintf(text, "Combo: x%.1f", gameState->currentMultiplier);
     DrawString(screen, 220, 20, text, charset);
-        
+    
     // czas
-    sprintf(text, "Czas: %.1lf s  | ilość FPS = %.0lf", gameState->worldTime, gameState->fps);
+    sprintf(text, "Czas: %.1lf s  | ilosc FPS = %.0lf", gameState->worldTime, gameState->fps);
     DrawString(screen, 220, 30, text, charset);
+    
+    // wymagania
+    DrawString(screen, 10, 45, "Zaimplementowane wymagania: 1, 2, 3, 4, A, B, C, D, E, G", charset);
 };
 
 void drawAll(SDL_Surface* screen, SDL_Surface* charset, SDL_Rect skyRect, SDL_Rect groundRect, 
