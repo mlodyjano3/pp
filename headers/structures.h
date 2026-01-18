@@ -165,5 +165,14 @@ typedef struct {
     int devMode;
 } GameState;
 
+typedef struct {
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Surface* screen;
+    SDL_Surface* charset;
+    SDL_Surface* sprite;
+    SDL_Texture* scrtex;
+} AppResources;
+
 
 #endif

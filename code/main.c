@@ -13,6 +13,7 @@
 #include "../headers/points.h"
 #include "../headers/menu.h"
 #include "../headers/physics.h"
+#include "../headers/key_handling.h"
 
 #include <SDL.h>
 #include <SDL_main.h>
@@ -22,12 +23,11 @@ int main(int argc, char **argv) {
 	// inicjalizacje wszelkie
 
 	SDL_Event event;
-	SDL_Surface *screen, *charset;
 	SDL_Surface *eti;
-	SDL_Surface *sprite;
-	SDL_Texture *scrtex;
-	SDL_Window *window;
-	SDL_Renderer *renderer;
+	SDL_Surface *charset;
+
+	AppResources appResources;
+
 	SDL_Rect skyRectangle = {0, 0, SCREEN_WIDTH, BACKGROUND_HEIGHT};
 	SDL_Rect groundRectangle = { 0,FLOOR_ZERO_Y, SCREEN_WIDTH, FLOOR_HEIGHT};
 
@@ -38,20 +38,20 @@ int main(int argc, char **argv) {
 
 	srand(time(NULL));
 
-	int configurationStatus = configureSDL(&window, &renderer);
+	int configurationStatus = configureSDL(&appResources.window, &appResources.renderer);
 	if (configurationStatus != 0) {
 		return 1;
 	};
 
-	screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-	scrtex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING,SCREEN_WIDTH, SCREEN_HEIGHT);
+	appResources.screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	appResources.scrtex = SDL_CreateTexture(appResources.renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING,SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	char text[128];
+
 	int czarny, zielony, czerwony, niebieski, groundColor, skyColor;
-	initColors(&czarny, &zielony, &czerwony, &niebieski, &groundColor, &skyColor, &screen);
+	initColors(&czarny, &zielony, &czerwony, &niebieski, &groundColor, &skyColor, &appResources.screen);
 
 
-	if (LoadFiles(&screen, &charset, &eti, window, renderer, scrtex, &sprite) != 0) {
+	if (LoadFiles(&appResources.screen, &charset, &eti, appResources.window, appResources.renderer, appResources.scrtex, &appResources.sprite) != 0) {
         printf("Blad ladowania plikow!\n");
         return 1; 
     }
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 		&player, 
 		100,
 		FLOOR_ZERO_Y + 10,
-		sprite
+		appResources.sprite
 	);
 
 	// napraw
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
 	for (int i = 0; i < enemiesData.enemies_count; i++) {
 		EntityType type = (i % 2 == 0) ? ENTITY_ENEMY_WALKER : ENTITY_ENEMY_CHARGER;
-		enemyInitialize(&enemiesData.enemies[i], sprite, &player, type);
+		enemyInitialize(&enemiesData.enemies[i], appResources.sprite, &player, type);
 	};
 
 	int t1 = SDL_GetTicks();
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     }
     
 	// menu dla gracza
-    int startGame = menuRun(screen, charset, renderer, scrtex);
+    int startGame = menuRun(appResources.screen, charset, appResources.renderer, appResources.scrtex);
     if (!startGame) {
         // gracz wybralem wyjscie z menu
         gameState.quit = 1;
@@ -95,243 +95,36 @@ int main(int argc, char **argv) {
 	// glowna petla
     //
 	while(!gameState.quit) {
-		int t2 = SDL_GetTicks();
-		double delta = (t2 - t1) * 0.001;
-		t1 = t2;
-
+		double delta = calculateDelta(&t1, &gameState);
 		gameState.worldTime += delta;
 
-		playerUpdate(&player, delta, &enemiesData, &gameState); // update gracza
-		updatePlayerHitboxes(&player); /// update hitboxow gracza
-        checkPlayerAttackCollisions(&player, &enemiesData, &gameState); // sprawdzanie atak hitboxow gracza
-        scoringUpdate(&gameState, delta); // update punktow
-        enemiesUpdate(&enemiesData, &player, delta, &gameState); // update przeciwnikow
-		
+		updateAll(&player, &enemiesData, &gameState, &camera, delta);
 
-
-		camera.position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
-		camera.position.y = SCREEN_HEIGHT / 2; // kamera zawsze pozostaje w tym samym miejscu osi y
-
-		if (camera.position.x < 0) {
-            camera.position.x = 0;
-        };
-		if (camera.position.x > LEVEL_WIDTH - SCREEN_WIDTH) {
-            camera.position.x = LEVEL_WIDTH - SCREEN_WIDTH;
-        };
-
-		// podstawa + niebo
-		SDL_FillRect(screen, &skyRectangle, skyColor);
-		SDL_FillRect(screen, &groundRectangle, groundColor);
-
-		// rysowanie gracza
-		player.scale = 0.5f + (player.position.y / (float) SCREEN_HEIGHT); // skala w zaleznosci od polozenia y
-		DrawEntityScaledAnimated(screen, player.tex, 
-			(int)player.position.x - camera.position.x + (player.measurements.w / 2),
-			(int)player.position.y - player.position.z,
-			player.scale,
-			&player
+		drawAll(
+			&appResources.screen, &charset, skyRectangle, groundRectangle, 
+			&player, &camera, &enemiesData, &gameState, 
+			skyColor, groundColor, niebieski, czerwony, zielony, czarny
 		);
 
-
-        int shouldDrawRanges = 0;
-        if (RANGES_DISPLAYED_DEV_ONLY == 0) {
-            shouldDrawRanges = 1;
-        } else if (RANGES_DISPLAYED_DEV_ONLY == 1 && gameState.devMode) {
-            shouldDrawRanges = 1; // dev mode rysowanie
-        }
-        
-        if (shouldDrawRanges) {
-            int attackW = 0;
-            int attackH = 0;
-            
-            if (player.currentState == ENTITY_ATTACK_LIGHT) {
-                attackW = LIGHT_ATTACK_WIDTH;
-                attackH = LIGHT_ATTACK_HEIGHT;
-            } else if (player.currentState == ENTITY_ATTACK_HEAVY) {
-                attackW = HEAVY_ATTACK_WIDTH;
-                attackH = HEAVY_ATTACK_HEIGHT;
-            } else if (player.currentState == ENTITY_COMBO_TRIPLE_LIGHT) {
-                attackW = LIGHT_ATTACK_WIDTH + 20;
-                attackH = LIGHT_ATTACK_HEIGHT + 10;
-            } else if (player.currentState == ENTITY_COMBO_TRIPLE_HEAVY) {
-                attackW = HEAVY_ATTACK_WIDTH + 30;
-                attackH = HEAVY_ATTACK_HEIGHT + 20;
-            } else if (player.currentState == ENTITY_COMBO_MIXED) {
-                attackW = HEAVY_ATTACK_WIDTH + 10;
-                attackH = HEAVY_ATTACK_HEIGHT + 10;
-            }
-            
-            if (attackW > 0) {
-                int zolty = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
-                DrawAttackRange(screen, &player, camera, attackW, attackH, zolty);
-            }
-        }
-
-		// rysowanie wrogow
-		for (int i = 0; i < enemiesData.enemies_count; i++) {
-			Entity* enemy = &enemiesData.enemies[i];
-			
-			if (enemy->health.health > 0) {
-				int fillColor = niebieski;
-				
-				if (enemy->type == ENTITY_ENEMY_WALKER) {
-				    fillColor = niebieski;
-				} else if (enemy->type == ENTITY_ENEMY_CHARGER) {
-				    // czerwony normalnie, zolty jak szarzuje
-					if (enemy->chargerData.isCharging) {
-						fillColor = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
-					} else {
-						fillColor = czerwony;
-					};
-				};
-				
-				DrawRectangle(screen,
-					(int)enemy->position.x - camera.position.x,
-					(int)enemy->position.y - enemy->measurements.h,
-					enemy->measurements.w,
-					enemy->measurements.h,
-					czarny,
-					fillColor
-				);
-				
-				//  pasek hp
-				int hpBarWidth = enemy->measurements.w;
-				int currentHpWidth = (int)(hpBarWidth * ((float)enemy->health.health / enemy->health.maxHealth));
-				
-				DrawRectangle(screen,
-					(int)enemy->position.x - camera.position.x,
-					(int)enemy->position.y - enemy->measurements.h - 8,
-					currentHpWidth,
-					4,
-					czarny,
-					zielony
-				);
-				
-				if (shouldDrawRanges) {
-				    int rangeColor = SDL_MapRGB(screen->format, 0xFF, 0x00, 0xFF);
-				    
-				    if (enemy->type == ENTITY_ENEMY_WALKER) {
-				        // zasieg ataku walker
-				        DrawCircleRange(screen,
-				            (int)enemy->position.x - camera.position.x + enemy->measurements.w/2,
-				            (int)enemy->position.y - enemy->measurements.h/2,
-				            WALKER_ATTACK_RANGE,
-				            rangeColor
-				        );
-				    } else if (enemy->type == ENTITY_ENEMY_CHARGER) {
-				        // zasieg wykrywania przez chargera
-				        int detectColor = SDL_MapRGB(screen->format, 0x00, 0xFF, 0xFF); // cyan
-				        DrawCircleRange(screen,
-				            (int)enemy->position.x - camera.position.x + enemy->measurements.w/2,
-				            (int)enemy->position.y - enemy->measurements.h/2,
-				            CHARGER_DETECT_RANGE,
-				            detectColor
-				        );
-				        
-				        // okrąg zasięgu eksplozji
-				        DrawCircleRange(screen,
-				            (int)enemy->position.x - camera.position.x + enemy->measurements.w/2,
-				            (int)enemy->position.y - enemy->measurements.h/2,
-				            CHARGER_ATTACK_RANGE,
-				            rangeColor
-				        );
-				    }
-				}
-			}
-		}
-
-        
-
-		// logika fpsow
-		gameState.fpsTimer += delta;
-		if (gameState.fpsTimer > 0.5) {
-			gameState.fps = frames * 2;
-			frames = 0;
-			gameState.fpsTimer -= 0.5;
-		};
-
-		// interfejs
-		DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 50, czerwony, niebieski);
-        
-        //pasek hp gracza
-        DrawHealthBar(screen, 10, 10, 200, 15, player.health.health, player.health.maxHealth);
-        sprintf(text, "HP: %d/%d", player.health.health, player.health.maxHealth);
-        DrawString(screen, 10, 28, text, charset);
-        
-        // punkty i multiplier
-        sprintf(text, "Punkty %.0f", gameState.score);
-        DrawString(screen, 220, 10, text, charset);
-        
-        sprintf(text, "Combo: x%.1f", gameState.currentMultiplier);
-        DrawString(screen, 220, 20, text, charset);
-        
-        // czas
-        sprintf(text, "Czas: %.1lf s  | ilość FPS = %.0lf", gameState.worldTime, gameState.fps);
-        DrawString(screen, 220, 30, text, charset);
-        
-        // tryb developerski
-        if (gameState.devMode) {
-            DrawDevMode(screen, charset, &player, &gameState);
-        };
-
-		SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch); // screen -> scrtex (ram -> gpu)
-		SDL_RenderCopy(renderer, scrtex, NULL, NULL); // rysuje teksture
-		SDL_RenderPresent(renderer); // wyswietla frame
+		displayFrame(&appResources.renderer, &appResources.scrtex, &appResources.screen);
+		
+		// aktualizacja fpsow
+		updateFPS(&gameState, &frames, delta);
 
 		// obsluga przyciskow
 		while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_KEYDOWN: {
-					switch (event.key.keysym.sym) {
-						case SDLK_ESCAPE: {
-							gameState.quit = 1;
-							break;
-						} 
-						case SDLK_n: {
-                            // przywracanie stanu poczatkowego
-                            gameState.worldTime = 0.0;
-                            gameState.distance = 0.0;
-                            frames = 0;
-                            gameState.fpsTimer = 0.0;
-                            gameState.etiSpeed = 1.0;
-                            
-                            scoringInitialize(&gameState);
-                            
-                            // reset gracza
-                            playerInitialize(&player, 100, FLOOR_ZERO_Y + 10, sprite);
-                            player.invicibilityTimer = 0;
-                            player.isInvicible = 0;
-                            
-                            // reset wrogow
-                            for (int i = 0; i < enemiesData.enemies_count; i++) {
-                                EntityType type = (i % 2 == 0) ? ENTITY_ENEMY_WALKER : ENTITY_ENEMY_CHARGER;
-                                enemyInitialize(&enemiesData.enemies[i], sprite, &player, type);
-                                enemiesData.enemies[i].wasHitThisAttack = 0;
-                            }
-                            break;
-                        }
-						case SDLK_p: { // tryb deva
-							gameState.devMode = !gameState.devMode;
-							break;
-						}
-					};
-					break;
-				};
-                case SDL_QUIT: { // kasacja gry, okno closed
-                    gameState.quit = 1;
-                    break;
-				};
-        	};
-
+            handleKey(
+				event, &gameState, &frames, &player, &appResources.sprite, &enemiesData
+			);
 		};
 		frames++;
 	};
 	// zwolnienie resources
 	SDL_FreeSurface(charset);
-	SDL_FreeSurface(screen);
-	SDL_DestroyTexture(scrtex);
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
+	SDL_FreeSurface(appResources.screen);
+	SDL_DestroyTexture(appResources.scrtex);
+	SDL_DestroyRenderer(appResources.renderer);
+	SDL_DestroyWindow(appResources.window);
 
 	SDL_Quit();
 	return 0;

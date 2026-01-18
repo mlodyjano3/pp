@@ -33,5 +33,23 @@ void DrawAttackRange(SDL_Surface* screen, Entity* entity, Camera camera,
                      int attackWidth, int attackHeight, Uint32 color);
 void DrawCircleRange(SDL_Surface* screen, int centerX, int centerY, 
                      int radius, Uint32 color);
+void drawingRanges(Entity player, Camera *camera, GameState gameState, SDL_Surface* screen);
+void drawEnemies(
+    EnemiesData* enemiesData, Camera* camera, 
+    SDL_Surface* screen, int shouldDrawRangesBool,
+    int niebieski, int czerwony, int zielony, int czarny);
+void drawWorld(SDL_Surface* screen, Entity* player, Camera* camera, EnemiesData* enemiesData, GameState* gameState, SDL_Rect skyRectangle, SDL_Rect groundRectangle, int skyColor, int groundColor, int niebieski, int czerwony, int zielony, int czarny);
+void drawInterface(
+    SDL_Surface* screen, SDL_Surface* charset, Entity player, GameState* gameState,
+    int czerwony, int niebieski, int zielony, int czarny);
+void drawAll(SDL_Surface* screen, SDL_Surface* charset, SDL_Rect skyRect, SDL_Rect groundRect, 
+    Entity* player, Camera* camera, 
+    EnemiesData* enemiesData, GameState* gameState, 
+    int skyColor, int groundColor, 
+    int niebieski, int czerwony, int zielony, int czarny);
+void displayFrame(SDL_Renderer* renderer, SDL_Texture* scrtex, SDL_Surface* screen);
+
+
+
 
 #endif

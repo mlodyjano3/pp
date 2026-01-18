@@ -120,4 +120,43 @@ void checkPlayerAttackCollisions(Entity* player, EnemiesData* enemiesData, GameS
             enemiesData->enemies[i].wasHitThisAttack = 0;
         }
     };
-}
+};
+
+void cameraUpdate(Camera* camera, Entity player) {
+    camera->position.x = player.position.x -(SCREEN_WIDTH / 2) + (player.measurements.h / 2); // logika positioningu kamery na osi x
+	camera->position.y = SCREEN_HEIGHT / 2; // kamera zawsze pozostaje w tym samym miejscu osi y
+
+	if (camera->position.x < 0) {
+        camera->position.x = 0;
+    };
+	if (camera->position.x > LEVEL_WIDTH - SCREEN_WIDTH) {
+        camera->position.x = LEVEL_WIDTH - SCREEN_WIDTH;
+    };
+};
+
+void updateFPS(GameState* gameState, int* frames, double delta) {
+    gameState->fpsTimer += delta;
+    if (gameState->fpsTimer > 0.5) {
+        gameState->fps = *frames * 2;
+        *frames = 0;
+        gameState->fpsTimer -= 0.5;
+    }
+};
+
+void updateAll(Entity* player, EnemiesData* enemies, GameState* gameState, Camera* camera, double delta) {
+    playerUpdate(player, delta, enemies, gameState);
+    updatePlayerHitboxes(player);
+    checkPlayerAttackCollisions(player, enemies, gameState);
+    scoringUpdate(gameState, delta);
+    enemiesUpdate(enemies, player, delta, gameState);
+    cameraUpdate(camera, *player);
+};
+
+double calculateDelta(int* t1, GameState* gameState) {
+    int t2 = SDL_GetTicks();
+    double delta = (t2 - *t1) * 0.001;
+    *t1 = t2;
+    gameState->worldTime += delta;
+    
+    return delta;
+};

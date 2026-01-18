@@ -306,3 +306,184 @@ void DrawCircleRange(SDL_Surface* screen, int centerX, int centerY,
         }
     }
 };
+
+void shouldDrawRanges(int* shouldDrawRanges, GameState gameState) {
+    int shouldDrawRanges = 0;
+    if (RANGES_DISPLAYED_DEV_ONLY == 0) {
+        shouldDrawRanges = 1;
+    } else if (RANGES_DISPLAYED_DEV_ONLY == 1 && gameState.devMode) {
+        shouldDrawRanges = 1; // dev mode rysowanie
+    };
+};
+
+void drawingRanges(Entity player, Camera *camera, GameState gameState, SDL_Surface* screen) {
+    int attackW = 0;
+    int attackH = 0;
+
+    if (player.currentState == ENTITY_ATTACK_LIGHT) {
+        attackW = LIGHT_ATTACK_WIDTH;
+        attackH = LIGHT_ATTACK_HEIGHT;
+    } else if (player.currentState == ENTITY_ATTACK_HEAVY) {
+        attackW = HEAVY_ATTACK_WIDTH;
+        attackH = HEAVY_ATTACK_HEIGHT;
+    } else if (player.currentState == ENTITY_COMBO_TRIPLE_LIGHT) {
+        attackW = LIGHT_ATTACK_WIDTH + 20;
+        attackH = LIGHT_ATTACK_HEIGHT + 10;
+    } else if (player.currentState == ENTITY_COMBO_TRIPLE_HEAVY) {
+        attackW = HEAVY_ATTACK_WIDTH + 30;
+        attackH = HEAVY_ATTACK_HEIGHT + 20;
+    } else if (player.currentState == ENTITY_COMBO_MIXED) {
+        attackW = HEAVY_ATTACK_WIDTH + 10;
+        attackH = HEAVY_ATTACK_HEIGHT + 10;
+    };
+
+    if (attackW > 0) {
+        int zolty = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
+        DrawAttackRange(screen, &player, *camera, attackW, attackH, zolty);
+    };
+};
+
+void drawEnemies(
+    EnemiesData* enemiesData, Camera* camera, 
+    SDL_Surface* screen, int shouldDrawRangesBool,
+    int niebieski, int czerwony, int zielony, int czarny) {
+    for (int i = 0; i < enemiesData->enemies_count; i++) {
+        Entity* enemy = &enemiesData->enemies[i];
+        
+        if (enemy->health.health > 0) {
+            int fillColor = niebieski;
+            
+            if (enemy->type == ENTITY_ENEMY_WALKER) {
+                fillColor = niebieski;
+            } else if (enemy->type == ENTITY_ENEMY_CHARGER) {
+                if (enemy->chargerData.isCharging) {
+                    fillColor = SDL_MapRGB(screen->format, 0xFF, 0xFF, 0x00);
+                } else {
+                    fillColor = czerwony;
+                };
+            };
+            
+            DrawRectangle(screen,
+                (int)enemy->position.x - camera->position.x,
+                (int)enemy->position.y - enemy->measurements.h,
+                enemy->measurements.w,
+                enemy->measurements.h,
+                czarny,
+                fillColor
+            );
+            
+            int hpBarWidth = enemy->measurements.w;
+            int currentHpWidth = (int)(hpBarWidth * ((float)enemy->health.health / enemy->health.maxHealth));
+            
+            DrawRectangle(screen,
+                (int)enemy->position.x - camera->position.x,
+                (int)enemy->position.y - enemy->measurements.h - 8,
+                currentHpWidth,
+                4,
+                czarny,
+                zielony
+            );
+            
+            if (shouldDrawRangesBool) {
+                int rangeColor = SDL_MapRGB(screen->format, 0xFF, 0x00, 0xFF);
+                
+                if (enemy->type == ENTITY_ENEMY_WALKER) {
+                    DrawCircleRange(screen,
+                        (int)enemy->position.x - camera->position.x + enemy->measurements.w/2,
+                        (int)enemy->position.y - enemy->measurements.h/2,
+                        WALKER_ATTACK_RANGE,
+                        rangeColor
+                    );
+                } else if (enemy->type == ENTITY_ENEMY_CHARGER) {
+                    int detectColor = SDL_MapRGB(screen->format, 0x00, 0xFF, 0xFF);
+                    DrawCircleRange(screen,
+                        (int)enemy->position.x - camera->position.x + enemy->measurements.w/2,
+                        (int)enemy->position.y - enemy->measurements.h/2,
+                        CHARGER_DETECT_RANGE,
+                        detectColor
+                    );
+                    
+                    DrawCircleRange(screen,
+                        (int)enemy->position.x - camera->position.x + enemy->measurements.w/2,
+                        (int)enemy->position.y - enemy->measurements.h/2,
+                        CHARGER_ATTACK_RANGE,
+                        rangeColor
+                    );
+                }
+            }
+        }
+    }
+};
+
+void drawWorld(SDL_Surface* screen, Entity* player, Camera* camera, EnemiesData* enemiesData, GameState* gameState, SDL_Rect skyRectangle, SDL_Rect groundRectangle, int skyColor, int groundColor, int niebieski, int czerwony, int zielony, int czarny) {
+    // podstawa + niebo
+    SDL_FillRect(screen, &skyRectangle, skyColor);
+    SDL_FillRect(screen, &groundRectangle, groundColor);
+
+    // rysowanie gracza
+    player->scale = BASE_PLAYER_SIZE + (player->position.y / (float)SCREEN_HEIGHT);
+    
+    DrawEntityScaledAnimated(screen, player->tex, 
+        (int)player->position.x - camera->position.x + (player->measurements.w / 2),
+        (int)player->position.y - player->position.z,
+        player->scale,
+        player
+    );
+
+    int shouldDrawRangesBool;
+    shouldDrawRanges(&shouldDrawRangesBool, *gameState);
+    
+    if (shouldDrawRangesBool) {
+        drawingRanges(*player, camera, *gameState, screen);
+    };
+
+    drawEnemies(enemiesData, camera, screen, shouldDrawRangesBool, niebieski, czerwony, zielony, czarny);
+};
+
+void drawInterface(
+    SDL_Surface* screen, SDL_Surface* charset, Entity player, GameState* gameState,
+    int czerwony, int niebieski, int zielony, int czarny) {
+    char text[128];
+    // interfejs
+	DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 50, czerwony, niebieski);
+        
+    //pasek hp gracza
+    DrawHealthBar(screen, 10, 10, 200, 15, player.health.health, player.health.maxHealth);
+    sprintf(text, "HP: %d/%d", player.health.health, player.health.maxHealth);
+    DrawString(screen, 10, 28, text, charset);
+        
+    // punkty i multiplier
+    sprintf(text, "Punkty %.0f", gameState->score);
+    DrawString(screen, 220, 10, text, charset);
+        
+    sprintf(text, "Combo: x%.1f", gameState->currentMultiplier);
+    DrawString(screen, 220, 20, text, charset);
+        
+    // czas
+    sprintf(text, "Czas: %.1lf s  | ilość FPS = %.0lf", gameState->worldTime, gameState->fps);
+    DrawString(screen, 220, 30, text, charset);
+};
+
+void drawAll(SDL_Surface* screen, SDL_Surface* charset, SDL_Rect skyRect, SDL_Rect groundRect, 
+    Entity* player, Camera* camera, 
+    EnemiesData* enemiesData, GameState* gameState, 
+    int skyColor, int groundColor, 
+    int niebieski, int czerwony, int zielony, int czarny) {
+    
+    drawWorld(
+        screen, player, camera, enemiesData, gameState, 
+        skyRect, groundRect, skyColor, groundColor, 
+        niebieski, czerwony, zielony, czarny);
+
+    drawInterface(screen, charset, *player, gameState, czerwony, niebieski, zielony, czarny);
+    
+    if (gameState->devMode) {
+        DrawDevMode(screen, charset, player, gameState);
+    }
+};
+
+void displayFrame(SDL_Renderer* renderer, SDL_Texture* scrtex, SDL_Surface* screen) {
+    SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch); // screen -> scrtex (ram -> gpu)
+	SDL_RenderCopy(renderer, scrtex, NULL, NULL); // rysuje teksture
+	SDL_RenderPresent(renderer); // wyswietla frame
+}
